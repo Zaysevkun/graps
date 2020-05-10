@@ -1,6 +1,7 @@
 from PyQt5 import QtWidgets, uic, QtGui
 import pyqtgraph as pg
 from functools import partial
+import datetime
 import sys
 
 
@@ -44,20 +45,31 @@ class MainWindow(QtWidgets.QMainWindow):
         variables_with_value['k'] = int(variables_with_value['k'])
         variables_with_value['n'] = int(variables_with_value['n'])
         variables_with_value['gerc'] = float(variables_with_value['gerc'])
+        variables_with_value['date'] = variables_with_value['date'].rstrip() + ' ' + variables_with_value['time'].rstrip() + '000'
+        variables_with_value['date'] = datetime.datetime.strptime(variables_with_value['date'], '%d-%m-%Y %H:%M:%S.%f')
         self.create_channels_menu(variables_with_value, channels_list)
         print(variables_with_value)
 
     def create_channels_menu(self, data, names):
         x_coordinates = []
-        helping_hand = [0,1,2,3,4]
+        x_labels = []
+        intial_date = data['date'].timestamp()
+        change_value = 1/data['gerc']
+        for i in range(data['n']):
+            x_value = intial_date + (change_value * i)
+            x_coordinates.append(x_value)
+            x_value = datetime.datetime.fromtimestamp(x_value)
+            x_value = x_value.isoformat(sep='T')
+            x_labels.append(x_value)
+        ticks = [list(zip(x_coordinates, x_labels))]
         plots_dict = {}
         names = ['button1', 'button2', 'button3']
         for i in range(data['k']):
-            plots_dict[data['Channels'][i]] = self.Channels.addPlot(y=data['channel_' + str(i)],
+            plots_dict[data['Channels'][i]] = self.Channels.addPlot(x=x_coordinates, y=data['channel_' + str(i)],
                                                                     name=data['Channels'][i], title=data['Channels'][i])
             plots_dict[data['Channels'][i]].autoBtn.clicked.connect(
-                partial(self.testFunc,data['channel_' + str(i)], data['Channels'][i]))
-            plots_dict[data['Channels'][i]] = plots_dict[data['Channels'][i]].plot(clear=True,
+                partial(self.testFunc, x_coordinates, data['channel_' + str(i)], data['Channels'][i], ticks))
+            plots_dict[data['Channels'][i]] = plots_dict[data['Channels'][i]].plot(clear=True, x=x_coordinates,
                                                                                    y=data['channel_' + str(i)],
                                                                                    name=data['Channels'][i])
 
@@ -65,8 +77,10 @@ class MainWindow(QtWidgets.QMainWindow):
             plots_dict[data['Channels'][i]].sigClicked.connect(self.unwrap_channel)
         return 123
 
-    def testFunc(self, data, name):
-        self.MainGraph.plot(clear=True, y=data, name=name).setPen(width=4.5)
+    def testFunc(self, x, y, name, ticks):
+        xaxis = self.MainGraph.getAxis('bottom')
+        self.MainGraph.plot(clear=True, x=x, y=y, name=name).setPen(width=4.5)
+        xaxis.setTicks(ticks)
         print('testing func')
 
     def unwrap_channel(self):
