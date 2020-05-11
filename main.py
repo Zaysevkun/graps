@@ -67,6 +67,16 @@ class MainWindow(QtWidgets.QMainWindow):
         for i in range(data['k']):
             plots_dict[data['Channels'][i]] = self.Channels.addPlot(x=x_coordinates, y=data['channel_' + str(i)],
                                                                     name=data['Channels'][i], title=data['Channels'][i])
+            plots_dict[data['Channels'][i]].setDownsampling(auto=True)
+            plots_dict[data['Channels'][i]].showAxis('right')
+            plots_dict[data['Channels'][i]].showAxis('top')
+
+            plots_dict[data['Channels'][i]].getAxis('top').setStyle(showValues=False)
+            plots_dict[data['Channels'][i]].getAxis('left').setStyle(showValues=False)
+            plots_dict[data['Channels'][i]].getAxis('right').setStyle(showValues=False)
+            plots_dict[data['Channels'][i]].getAxis('bottom').setStyle(showValues=False)
+
+            self.Channels.nextRow()
             plots_dict[data['Channels'][i]].autoBtn.clicked.connect(
                 partial(self.testFunc, x_coordinates, data['channel_' + str(i)], data['Channels'][i], ticks))
             plots_dict[data['Channels'][i]] = plots_dict[data['Channels'][i]].plot(clear=True, x=x_coordinates,
@@ -80,7 +90,9 @@ class MainWindow(QtWidgets.QMainWindow):
     def testFunc(self, x, y, name, ticks):
         xaxis = self.MainGraph.getAxis('bottom')
         self.MainGraph.plot(clear=True, x=x, y=y, name=name).setPen(width=4.5)
+        self.MainGraph.setDownsampling(auto=True)
         xaxis.setTicks(ticks)
+        xaxis.setStyle(textFillLimits=[(0, 0.8)])
         print('testing func')
 
     def unwrap_channel(self):
