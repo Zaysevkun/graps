@@ -113,6 +113,7 @@ class MainWindow(QtWidgets.QMainWindow):
         plots_dict = {}
         self.fill_info_window(data, x_coordinates[data['n']-1], file_name)
         names = ['button1', 'button2', 'button3']
+        #plots_dict[data['Channels'][i]] = self.Channels.setBorder(width=3)
         for i in range(data['k']):
             plots_dict[data['Channels'][i]] = self.Channels.addPlot(x=x_coordinates, y=data['channel_' + str(i)],
                                                                     name=data['Channels'][i], title=data['Channels'][i])
@@ -132,16 +133,16 @@ class MainWindow(QtWidgets.QMainWindow):
                                                                                    y=data['channel_' + str(i)],
                                                                                    name=data['Channels'][i])
 
-            plots_dict[data['Channels'][i]].setPen(width=4.5)
+            plots_dict[data['Channels'][i]].setPen(width=3)
             plots_dict[data['Channels'][i]].sigClicked.connect(self.unwrap_channel)
         return 123
 
     def testFunc(self, x, y, name, ticks):
         xaxis = self.MainGraph.getAxis('bottom')
-        self.MainGraph.plot(clear=True, x=x, y=y, name=name).setPen(width=4.5)
+        self.MainGraph.plot(clear=True, x=x, y=y, name=name).setPen(width=3)
         self.MainGraph.setDownsampling(auto=True)
-        xaxis.setTicks(ticks)
-        xaxis.setStyle(textFillLimits=[(0, 0.8)])
+        #xaxis.setTicks(ticks)
+        #xaxis.setStyle(textFillLimits=[(0, 0.8)])
         print('testing func')
 
     def unwrap_channel(self):
