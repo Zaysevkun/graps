@@ -1,6 +1,6 @@
 import os
 
-from PyQt5 import QtWidgets, uic, QtGui
+from PyQt5 import QtWidgets, uic, QtGui, QtCore
 import pyqtgraph as pg
 from functools import partial
 import datetime
@@ -8,6 +8,93 @@ import sys
 
 from PyQt5.QtGui import QFont
 from PyQt5.QtCore import Qt
+from PyQt5.QtWidgets import QSlider
+
+MAXVAL = 650000
+
+class RangeSliderClass(QtWidgets.QWidget):
+
+    def __init__(self):
+        super().__init__()
+
+        self.minTime = 0
+        self.maxTime = 0
+        self.minRangeTime = 0
+        self.maxRangeTime = 0
+
+        self.sliderMin = MAXVAL
+        self.sliderMax = MAXVAL
+
+        self.setupUi(self)
+
+    def setupUi(self, RangeSlider):
+        RangeSlider.setObjectName("RangeSlider")
+        RangeSlider.resize(1000, 65)
+        RangeSlider.setMaximumSize(QtCore.QSize(16777215, 65))
+        self.RangeBarVLayout = QtWidgets.QVBoxLayout(RangeSlider)
+        self.RangeBarVLayout.setContentsMargins(5, 0, 5, 0)
+        self.RangeBarVLayout.setSpacing(0)
+        self.RangeBarVLayout.setObjectName("RangeBarVLayout")
+
+        self.slidersFrame = QtWidgets.QFrame(RangeSlider)
+        self.slidersFrame.setMaximumSize(QtCore.QSize(16777215, 25))
+        self.slidersFrame.setFrameShape(QtWidgets.QFrame.StyledPanel)
+        self.slidersFrame.setFrameShadow(QtWidgets.QFrame.Raised)
+        self.slidersFrame.setObjectName("slidersFrame")
+        self.horizontalLayout = QtWidgets.QHBoxLayout(self.slidersFrame)
+        self.horizontalLayout.setSizeConstraint(QtWidgets.QLayout.SetMinimumSize)
+        self.horizontalLayout.setContentsMargins(5, 2, 5, 2)
+        self.horizontalLayout.setSpacing(0)
+        self.horizontalLayout.setObjectName("horizontalLayout")
+
+        ## Start Slider Widget
+        self.startSlider = QtWidgets.QSlider(self.slidersFrame)
+        self.startSlider.setMaximum(self.sliderMin)
+        self.startSlider.setMinimumSize(QtCore.QSize(100, 5))
+        self.startSlider.setMaximumSize(QtCore.QSize(16777215, 10))
+
+        font = QtGui.QFont()
+        font.setKerning(True)
+
+        self.startSlider.setFont(font)
+        self.startSlider.setAcceptDrops(False)
+        self.startSlider.setAutoFillBackground(False)
+        self.startSlider.setOrientation(QtCore.Qt.Horizontal)
+        self.startSlider.setInvertedAppearance(True)
+        self.startSlider.setObjectName("startSlider")
+        self.startSlider.setValue(MAXVAL)
+        self.startSlider.valueChanged.connect(self.handleStartSliderValueChange)
+        self.horizontalLayout.addWidget(self.startSlider)
+
+        ## End Slider Widget
+        self.endSlider = QtWidgets.QSlider(self.slidersFrame)
+        self.endSlider.setMaximum(MAXVAL)
+        self.endSlider.setMinimumSize(QtCore.QSize(100, 5))
+        self.endSlider.setMaximumSize(QtCore.QSize(16777215, 10))
+        self.endSlider.setTracking(True)
+        self.endSlider.setOrientation(QtCore.Qt.Horizontal)
+        self.endSlider.setObjectName("endSlider")
+        self.endSlider.setValue(self.sliderMax)
+        self.endSlider.valueChanged.connect(self.handleEndSliderValueChange)
+
+        #self.endSlider.sliderReleased.connect(self.handleEndSliderValueChange)
+
+        self.horizontalLayout.addWidget(self.endSlider)
+
+        self.RangeBarVLayout.addWidget(self.slidersFrame)
+
+        #self.retranslateUi(RangeSlider)
+        QtCore.QMetaObject.connectSlotsByName(RangeSlider)
+
+        self.show()
+
+    @QtCore.pyqtSlot(int)
+    def handleStartSliderValueChange(self, value):
+        self.startSlider.setValue(value)
+
+    @QtCore.pyqtSlot(int)
+    def handleEndSliderValueChange(self, value):
+        self.endSlider.setValue(value)
 
 
 class InfoWindow(QtWidgets.QMainWindow):
@@ -35,6 +122,9 @@ class MainWindow(QtWidgets.QMainWindow):
         self.MainGraph.setBackground(background=None)
         self.FileOpen.triggered.connect(self.browse_folder)
         self.SignalInfo.triggered.connect(self.open_info)
+        self.widget_cond = True
+
+
 
     def open_info(self):
 
@@ -109,14 +199,13 @@ class MainWindow(QtWidgets.QMainWindow):
             x_value = datetime.datetime.fromtimestamp(x_value)
             x_value = x_value.isoformat(sep=' ')
             x_labels.append(x_value)
-        ticks = [list(zip(x_coordinates, x_labels))]
+        ticks = dict(zip(x_coordinates, x_labels))
         plots_dict = {}
         self.fill_info_window(data, x_coordinates[data['n']-1], file_name)
         names = ['button1', 'button2', 'button3']
         #plots_dict[data['Channels'][i]] = self.Channels.setBorder(width=3)
         for i in range(data['k']):
-            plots_dict[data['Channels'][i]] = self.Channels.addPlot(x=x_coordinates, y=data['channel_' + str(i)],
-                                                                    name=data['Channels'][i], title=data['Channels'][i])
+            plots_dict[data['Channels'][i]] = self.Channels.addPlot(x=x_coordinates, y=data['channel_' + str(i)], title=data['Channels'][i])
             plots_dict[data['Channels'][i]].setDownsampling(auto=True)
             plots_dict[data['Channels'][i]].showAxis('right')
             plots_dict[data['Channels'][i]].showAxis('top')
@@ -130,25 +219,45 @@ class MainWindow(QtWidgets.QMainWindow):
             plots_dict[data['Channels'][i]].autoBtn.clicked.connect(
                 partial(self.testFunc, x_coordinates, data['channel_' + str(i)], data['Channels'][i], ticks))
             plots_dict[data['Channels'][i]] = plots_dict[data['Channels'][i]].plot(clear=True, x=x_coordinates,
-                                                                                   y=data['channel_' + str(i)],
-                                                                                   name=data['Channels'][i])
+                                                                                   y=data['channel_' + str(i)])
 
             plots_dict[data['Channels'][i]].setPen(width=3)
-            plots_dict[data['Channels'][i]].sigClicked.connect(self.unwrap_channel)
+        self.HideButton.clicked.connect(self.hideFunc)
         return 123
 
     def testFunc(self, x, y, name, ticks):
-        xaxis = self.MainGraph.getAxis('bottom')
-        self.MainGraph.plot(clear=True, x=x, y=y, name=name).setPen(width=3)
-        self.MainGraph.setDownsampling(auto=True)
-        #xaxis.setTicks(ticks)
-        #xaxis.setStyle(textFillLimits=[(0, 0.8)])
+        Plot = self.MainGraph.addPlot(clear=True, x=x, y=y, name=name, title=name)
+        self.MainGraph.nextRow()
+        slider = RangeSliderClass()
+        slider.minTime = x[0]
+        slider.maxTime = x[len(x)-1]
+        # slider.handleStartSliderValueChange(self, )
+        slider.startSlider.valueChanged.connect(partial(self.startSliderFunc, slider.startSlider.value()))
+        proxy = QtGui.QGraphicsProxyWidget()
+        proxy.setWidget(slider)
+        self.MainGraph.addItem(proxy)
+        self.MainGraph.nextRow()
+        xaxis = Plot.getAxis('bottom')
+        Plot = Plot.plot(clear=True, x=x, y=y, name=name).setPen(width=3)
+        majorTicks = list(ticks.items())[::300]
+        minorTicks = list(ticks.items())
+        del minorTicks[::300]
+        xaxis.setTicks([majorTicks, minorTicks])
+        # self.MainGraph.setDownsampling(auto=True)
         print('testing func')
 
-    def unwrap_channel(self):
-        print(123)
-        # i.setPen(color='r')
+    def hideFunc(self):
+        if self.widget_cond:
+            self.Channels.hide()
+            self.widget_cond = False
+        else:
+            self.Channels.show()
+            print('sucess')
+            self.widget_cond = True
 
+    def startSliderFunc(self,value):
+        print(value)
+        return 321
 
 def main():
     app = QtWidgets.QApplication(sys.argv)
