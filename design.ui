@@ -126,7 +126,23 @@
      </property>
      <addaction name="SignalInfo"/>
     </widget>
+    <widget class="QMenu" name="menu_6">
+     <property name="title">
+      <string>Моделирование</string>
+     </property>
+     <addaction name="model_1"/>
+     <addaction name="model_2"/>
+     <addaction name="model_3"/>
+     <addaction name="model_4"/>
+     <addaction name="model_5"/>
+     <addaction name="model_6"/>
+     <addaction name="separator"/>
+     <addaction name="model_7"/>
+     <addaction name="model_8"/>
+     <addaction name="model_9"/>
+    </widget>
     <addaction name="menu_5"/>
+    <addaction name="menu_6"/>
    </widget>
    <widget class="QMenu" name="menu_3">
     <property name="title">
@@ -158,6 +174,61 @@
   <action name="SignalInfo">
    <property name="text">
     <string>Информация о сигнале</string>
+   </property>
+  </action>
+  <action name="action_2">
+   <property name="text">
+    <string>задержанный единичный импульс</string>
+   </property>
+  </action>
+  <action name="action_3">
+   <property name="text">
+    <string>сигнал с тональной огибающей</string>
+   </property>
+  </action>
+  <action name="model_1">
+   <property name="text">
+    <string>задержанный единичный импульс</string>
+   </property>
+  </action>
+  <action name="model_2">
+   <property name="text">
+    <string>задержанный единичный скачок</string>
+   </property>
+  </action>
+  <action name="model_3">
+   <property name="text">
+    <string>дискретизированная убывающая экспонента</string>
+   </property>
+  </action>
+  <action name="model_4">
+   <property name="text">
+    <string>дискретизированная синусоида</string>
+   </property>
+  </action>
+  <action name="model_5">
+   <property name="text">
+    <string>&quot;мэандр&quot;</string>
+   </property>
+  </action>
+  <action name="model_6">
+   <property name="text">
+    <string>&quot;пила&quot;</string>
+   </property>
+  </action>
+  <action name="model_7">
+   <property name="text">
+    <string>сигнал с экспоненциальной огибающей</string>
+   </property>
+  </action>
+  <action name="model_8">
+   <property name="text">
+    <string>сигнал с балансной огибающей</string>
+   </property>
+  </action>
+  <action name="model_9">
+   <property name="text">
+    <string>сигнал с тональной огибающей</string>
    </property>
   </action>
  </widget>

@@ -8,9 +8,10 @@ import sys
 
 from PyQt5.QtGui import QFont
 from PyQt5.QtCore import Qt
-from PyQt5.QtWidgets import QSlider
+from PyQt5.QtWidgets import QSlider, QLabel, QLineEdit
 
 MAXVAL = 650000
+
 
 class RangeSliderClass(QtWidgets.QWidget):
 
@@ -77,13 +78,13 @@ class RangeSliderClass(QtWidgets.QWidget):
         self.endSlider.setValue(self.sliderMax)
         self.endSlider.valueChanged.connect(self.handleEndSliderValueChange)
 
-        #self.endSlider.sliderReleased.connect(self.handleEndSliderValueChange)
+        # self.endSlider.sliderReleased.connect(self.handleEndSliderValueChange)
 
         self.horizontalLayout.addWidget(self.endSlider)
 
         self.RangeBarVLayout.addWidget(self.slidersFrame)
 
-        #self.retranslateUi(RangeSlider)
+        # self.retranslateUi(RangeSlider)
         QtCore.QMetaObject.connectSlotsByName(RangeSlider)
 
         self.show()
@@ -107,6 +108,16 @@ class InfoWindow(QtWidgets.QMainWindow):
         uic.loadUi('design_window2.ui', self)
 
 
+class ModelWindow(QtWidgets.QDialog):
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        # Load the UI Page
+        # pg.setConfigOption('background', 'w')
+        uic.loadUi('design_model_window.ui', self)
+
+
 class MainWindow(QtWidgets.QMainWindow):
     variables_with_value = {}
     plots_dict = {}
@@ -118,13 +129,22 @@ class MainWindow(QtWidgets.QMainWindow):
         # pg.setConfigOption('background', 'w')
         uic.loadUi('design.ui', self)
         self.dialog = InfoWindow(self)
+        self.model = ModelWindow(self)
         self.Channels.setBackground(background=None)
         self.MainGraph.setBackground(background=None)
         self.FileOpen.triggered.connect(self.browse_folder)
         self.SignalInfo.triggered.connect(self.open_info)
         self.widget_cond = True
-
-
+        self.opened_check = True
+        self.model_1.triggered.connect(partial(self.model_button_clicked, "1"))
+        self.model_2.triggered.connect(partial(self.model_button_clicked, "2"))
+        self.model_3.triggered.connect(partial(self.model_button_clicked, "3"))
+        self.model_4.triggered.connect(partial(self.model_button_clicked, "4"))
+        self.model_5.triggered.connect(partial(self.model_button_clicked, "5"))
+        self.model_6.triggered.connect(partial(self.model_button_clicked, "6"))
+        self.model_7.triggered.connect(partial(self.model_button_clicked, "7"))
+        self.model_8.triggered.connect(partial(self.model_button_clicked, "8"))
+        self.model_9.triggered.connect(partial(self.model_button_clicked, "9"))
 
     def open_info(self):
 
@@ -142,10 +162,12 @@ class MainWindow(QtWidgets.QMainWindow):
         self.dialog.text_info.setText("<b>Текущее состояние многоканального сигнала</b><br>"
                                       "Общее число каналов " + str(data['k']) +
                                       "<br>Общее количество отсчетов " + str(data['n']) +
-                                      "<br>Частота дискретизации " + str(data['gerc']) + "(шаг между отсчетами " + str(1/data['gerc']) + " сек)"
-                                      "<br>Дата и время начала записи - " + start_date +
+                                      "<br>Частота дискретизации " + str(data['gerc']) + "(шаг между отсчетами " + str(
+            1 / data['gerc']) + " сек)"
+                                "<br>Дата и время начала записи - " + start_date +
                                       "<br>Дата и время окончания записи - " + last_date +
-                                      "<br>Длительность: " + str(day) + " - суток, " + str(hour) + " - часов, " + str(minute) + " - минут, " + str(second) + " - секунд" +
+                                      "<br>Длительность: " + str(day) + " - суток, " + str(hour) + " - часов, " + str(
+            minute) + " - минут, " + str(second) + " - секунд" +
                                       "<br><br><br><br><b>Информация о каналах</b>")
         self.dialog.text_info.setFont(QFont('Times', 11))
         for i in range(data['k']):
@@ -156,6 +178,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.dialog.list_info.setStyleSheet("background-color: white; border: 1px inset grey; min-height: 200px;")
 
     def browse_folder(self):
+        self.opened_check = False
         path = QtWidgets.QFileDialog.getOpenFileName()
         file = path[0]
         channels_list = ["channel_0", "channel_1", "channel_2", "channel_3", "channel_4", "channel_5", "channel_6"]
@@ -201,11 +224,12 @@ class MainWindow(QtWidgets.QMainWindow):
             x_labels.append(x_value)
         ticks = dict(zip(x_coordinates, x_labels))
         plots_dict = {}
-        self.fill_info_window(data, x_coordinates[data['n']-1], file_name)
+        self.fill_info_window(data, x_coordinates[data['n'] - 1], file_name)
         names = ['button1', 'button2', 'button3']
-        #plots_dict[data['Channels'][i]] = self.Channels.setBorder(width=3)
+        # plots_dict[data['Channels'][i]] = self.Channels.setBorder(width=3)
         for i in range(data['k']):
-            plots_dict[data['Channels'][i]] = self.Channels.addPlot(x=x_coordinates, y=data['channel_' + str(i)], title=data['Channels'][i])
+            plots_dict[data['Channels'][i]] = self.Channels.addPlot(x=x_coordinates, y=data['channel_' + str(i)],
+                                                                    title=data['Channels'][i])
             plots_dict[data['Channels'][i]].setDownsampling(auto=True)
             plots_dict[data['Channels'][i]].showAxis('right')
             plots_dict[data['Channels'][i]].showAxis('top')
@@ -230,7 +254,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.MainGraph.nextRow()
         slider = RangeSliderClass()
         slider.minTime = x[0]
-        slider.maxTime = x[len(x)-1]
+        slider.maxTime = x[len(x) - 1]
         # slider.handleStartSliderValueChange(self, )
         slider.startSlider.valueChanged.connect(partial(self.startSliderFunc, slider.startSlider.value()))
         proxy = QtGui.QGraphicsProxyWidget()
@@ -255,9 +279,19 @@ class MainWindow(QtWidgets.QMainWindow):
             print('sucess')
             self.widget_cond = True
 
-    def startSliderFunc(self,value):
+    def startSliderFunc(self, value):
         print(value)
         return 321
+
+    def model_button_clicked(self, model_num):
+        self.model.text_hint.setText("<center>" + self.sender().text() + "</center><br>Введите данные:")
+        for i in reversed(range(self.model.form.count())):
+            self.model.form.removeRow(i)
+        if self.opened_check:
+            self.model.form.addRow(QLabel("Частота дискретизации:"), QLineEdit())
+            self.model.form.addRow(QLabel("Кол-во отсчетов:"), QLineEdit())
+        self.model.show()
+
 
 def main():
     app = QtWidgets.QApplication(sys.argv)
