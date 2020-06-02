@@ -123,6 +123,9 @@ class MainWindow(QtWidgets.QMainWindow):
     variables_with_value = {}
     plots_dict = {}
     model_num = 0
+    variables_with_value["Channels1"] = []
+    variables_with_value['k1'] = 0
+    variables_with_value['date1'] = ""
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -153,6 +156,7 @@ class MainWindow(QtWidgets.QMainWindow):
                                       "4": self.model_func_4, "5": self.model_func_5, "6": self.model_func_6,
                                       "7": self.model_func_7, "8": self.model_func_8, "9": self.model_func_9}
         self.model.buttons.button(QDialogButtonBox.Ok).clicked.connect(partial(self.model_func))
+        self.fileSave.triggered.connect(partial(self.save_func))
 
     def open_info(self):
 
@@ -191,33 +195,35 @@ class MainWindow(QtWidgets.QMainWindow):
         file = path[0]
         channels_list = ["channel_0", "channel_1", "channel_2", "channel_3", "channel_4", "channel_5", "channel_6"]
         variables_list = ["k", "n", "gerc", "date", "time", "Channels"]
-        variables_with_value = {}
         line_number_real = 0
         file_name = os.path.basename(file)
         for i in channels_list:
-            variables_with_value[i] = []
+            self.variables_with_value[i] = []
         with open(file) as f:
             for line_number, line in enumerate(f):
                 if line[0] == "#":
                     continue
                 else:
                     if line_number <= 11:
-                        variables_with_value[variables_list[line_number_real]] = line
+                        self.variables_with_value[variables_list[line_number_real]] = line
                         line_number_real += 1
                     else:
                         values = [float(s) for s in line.split()]
-                        for i in range(int(variables_with_value['k'])):
-                            variables_with_value[channels_list[i]].append(values.pop(0))
+                        for i in range(int(self.variables_with_value['k'])):
+                            self.variables_with_value[channels_list[i]].append(values.pop(0))
 
-        variables_with_value['Channels'] = variables_with_value['Channels'].split(';')
-        variables_with_value['k'] = int(variables_with_value['k'])
-        variables_with_value['n'] = int(variables_with_value['n'])
-        variables_with_value['gerc'] = float(variables_with_value['gerc'])
-        variables_with_value['date'] = variables_with_value['date'].rstrip() + ' ' + variables_with_value[
+        self.variables_with_value['Channels'] = self.variables_with_value['Channels'].rstrip()
+        self.variables_with_value['Channels'] = self.variables_with_value['Channels'].split(';')
+        self.variables_with_value["Channels1"] = self.variables_with_value["Channels"] + self.variables_with_value["Channels1"]
+        self.variables_with_value['k'] = int(self.variables_with_value['k'])
+        self.variables_with_value['k1'] += self.variables_with_value['k']
+        self.variables_with_value['n'] = int(self.variables_with_value['n'])
+        self.variables_with_value['gerc'] = float(self.variables_with_value['gerc'])
+        self.variables_with_value['date1'] = self.variables_with_value['date'].rstrip()
+        self.variables_with_value['date'] = self.variables_with_value['date'].rstrip() + ' ' + self.variables_with_value[
             'time'].rstrip() + '000'
-        variables_with_value['date'] = datetime.datetime.strptime(variables_with_value['date'], '%d-%m-%Y %H:%M:%S.%f')
-        self.create_channels_menu(variables_with_value, channels_list, file_name)
-        self.variables_with_value = variables_with_value
+        self.variables_with_value['date'] = datetime.datetime.strptime(self.variables_with_value['date'], '%d-%m-%Y %H:%M:%S.%f')
+        self.create_channels_menu(self.variables_with_value, channels_list, file_name)
 
     def create_channels_menu(self, data, names, file_name):
         x_coordinates = []
@@ -231,29 +237,29 @@ class MainWindow(QtWidgets.QMainWindow):
             x_value = x_value.isoformat(sep=' ')
             x_labels.append(x_value)
         ticks = dict(zip(x_coordinates, x_labels))
-        plots_dict = {}
+        # plots_dict = {}
         self.fill_info_window(data, x_coordinates[data['n'] - 1], file_name)
         names = ['button1', 'button2', 'button3']
         # plots_dict[data['Channels'][i]] = self.Channels.setBorder(width=3)
         for i in range(data['k']):
-            plots_dict[data['Channels'][i]] = self.Channels.addPlot(x=x_coordinates, y=data['channel_' + str(i)],
+            self.plots_dict[data['Channels'][i]] = self.Channels.addPlot(x=x_coordinates, y=data['channel_' + str(i)],
                                                                     title=data['Channels'][i])
-            plots_dict[data['Channels'][i]].setDownsampling(auto=True)
-            plots_dict[data['Channels'][i]].showAxis('right')
-            plots_dict[data['Channels'][i]].showAxis('top')
+            self.plots_dict[data['Channels'][i]].setDownsampling(auto=True)
+            self.plots_dict[data['Channels'][i]].showAxis('right')
+            self.plots_dict[data['Channels'][i]].showAxis('top')
 
-            plots_dict[data['Channels'][i]].getAxis('top').setStyle(showValues=False)
-            plots_dict[data['Channels'][i]].getAxis('left').setStyle(showValues=False)
-            plots_dict[data['Channels'][i]].getAxis('right').setStyle(showValues=False)
-            plots_dict[data['Channels'][i]].getAxis('bottom').setStyle(showValues=False)
+            self.plots_dict[data['Channels'][i]].getAxis('top').setStyle(showValues=False)
+            self.plots_dict[data['Channels'][i]].getAxis('left').setStyle(showValues=False)
+            self.plots_dict[data['Channels'][i]].getAxis('right').setStyle(showValues=False)
+            self.plots_dict[data['Channels'][i]].getAxis('bottom').setStyle(showValues=False)
 
             self.Channels.nextRow()
-            plots_dict[data['Channels'][i]].autoBtn.clicked.connect(
+            self.plots_dict[data['Channels'][i]].autoBtn.clicked.connect(
                 partial(self.testFunc, x_coordinates, data['channel_' + str(i)], data['Channels'][i], ticks))
-            plots_dict[data['Channels'][i]] = plots_dict[data['Channels'][i]].plot(clear=True, x=x_coordinates,
-                                                                                   y=data['channel_' + str(i)])
+            self.plots_dict[data['Channels'][i]] = self.plots_dict[data['Channels'][i]].plot(clear=True, x=x_coordinates,
+                                                                                    y=data['channel_' + str(i)])
 
-            plots_dict[data['Channels'][i]].setPen(width=3)
+            self.plots_dict[data['Channels'][i]].setPen(width=3)
         return 123
 
     def testFunc(self, x, y, name, ticks):
@@ -495,6 +501,8 @@ class MainWindow(QtWidgets.QMainWindow):
         return gercs, n
 
     def draw_model(self, x, y, ticks):
+        self.variables_with_value["k1"] += 1
+        self.variables_with_value['Channels1'].append(self.model_name)
         plot = self.Channels.addPlot(x=x, y=y, title=self.model_name)
         plot.showAxis("right")
         plot.showAxis("bottom")
@@ -502,10 +510,40 @@ class MainWindow(QtWidgets.QMainWindow):
         plot.getAxis('bottom').setStyle(showValues=False)
         plot.getAxis('left').setStyle(showValues=False)
         plot.getAxis('right').setStyle(showValues=False)
+        self.plots_dict[self.model_name] = plot.plot(x=x, y=y, title=self.model_name)
         self.Channels.nextRow()
         plot.autoBtn.clicked.connect(
             partial(self.testFunc, x, y, self.model_name, ticks))
 
+    def save_func(self):
+        name = QtGui.QFileDialog.getSaveFileName(self, 'Save File')
+        file = open(name[0], 'w')
+        text = self.generate_file()
+        file.write(text)
+        file.close()
+
+    def generate_file(self):
+        k = str(self.variables_with_value["k1"])
+        n = str(self.variables_with_value["n"])
+        gerc = str(self.variables_with_value["gerc"])
+        if "date" in self.variables_with_value:
+            date = self.variables_with_value["date1"]
+            time = self.variables_with_value["time"].rstrip()
+        else:
+            date = "01-01-2000"
+            time = "00:00:00"
+        channels = ';'.join(self.variables_with_value["Channels1"])
+        # channels.rstrip()
+        text = "# channels number\n" \
+               + k + \
+               "\n# samples number\n" + n + "\n# sampling rate\n" + gerc + "\n# start date\n" + date + "\n# start " \
+                                                                                                       "time\n" + \
+               time + "\n# channels names\n" + channels + "\n"
+        for i in range(int(n)):
+            for j in range(int(k)):
+                text += str(self.plots_dict[self.variables_with_value["Channels1"][j]].yData[i]) + " "
+            text += "\n"
+        return text
 
 def main():
     app = QtWidgets.QApplication(sys.argv)

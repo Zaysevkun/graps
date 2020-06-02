@@ -110,6 +110,7 @@
      <string>Файл</string>
     </property>
     <addaction name="FileOpen"/>
+    <addaction name="fileSave"/>
    </widget>
    <widget class="QMenu" name="menu">
     <property name="title">
@@ -229,6 +230,11 @@
   <action name="model_9">
    <property name="text">
     <string>сигнал с тональной огибающей</string>
+   </property>
+  </action>
+  <action name="fileSave">
+   <property name="text">
+    <string>Сохранить</string>
    </property>
   </action>
  </widget>
