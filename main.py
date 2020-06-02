@@ -1,3 +1,4 @@
+import math
 import os
 
 from PyQt5 import QtWidgets, uic, QtGui, QtCore
@@ -8,7 +9,7 @@ import sys
 
 from PyQt5.QtGui import QFont
 from PyQt5.QtCore import Qt
-from PyQt5.QtWidgets import QSlider, QLabel, QLineEdit
+from PyQt5.QtWidgets import QSlider, QLabel, QLineEdit, QDialogButtonBox
 
 MAXVAL = 650000
 
@@ -121,6 +122,7 @@ class ModelWindow(QtWidgets.QDialog):
 class MainWindow(QtWidgets.QMainWindow):
     variables_with_value = {}
     plots_dict = {}
+    model_num = 0
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -134,17 +136,23 @@ class MainWindow(QtWidgets.QMainWindow):
         self.MainGraph.setBackground(background=None)
         self.FileOpen.triggered.connect(self.browse_folder)
         self.SignalInfo.triggered.connect(self.open_info)
+        self.HideButton.clicked.connect(self.hideFunc)
         self.widget_cond = True
         self.opened_check = True
-        self.model_1.triggered.connect(partial(self.model_button_clicked, "1"))
-        self.model_2.triggered.connect(partial(self.model_button_clicked, "2"))
-        self.model_3.triggered.connect(partial(self.model_button_clicked, "3"))
-        self.model_4.triggered.connect(partial(self.model_button_clicked, "4"))
-        self.model_5.triggered.connect(partial(self.model_button_clicked, "5"))
-        self.model_6.triggered.connect(partial(self.model_button_clicked, "6"))
-        self.model_7.triggered.connect(partial(self.model_button_clicked, "7"))
-        self.model_8.triggered.connect(partial(self.model_button_clicked, "8"))
-        self.model_9.triggered.connect(partial(self.model_button_clicked, "9"))
+        self.model_name = ""
+        self.model_1.triggered.connect(partial(self.model_button_clicked, 1))
+        self.model_2.triggered.connect(partial(self.model_button_clicked, 2))
+        self.model_3.triggered.connect(partial(self.model_button_clicked, 3))
+        self.model_4.triggered.connect(partial(self.model_button_clicked, 4))
+        self.model_5.triggered.connect(partial(self.model_button_clicked, 5))
+        self.model_6.triggered.connect(partial(self.model_button_clicked, 6))
+        self.model_7.triggered.connect(partial(self.model_button_clicked, 7))
+        self.model_8.triggered.connect(partial(self.model_button_clicked, 8))
+        self.model_9.triggered.connect(partial(self.model_button_clicked, 9))
+        self.model_func_dictionary = {"1": self.model_func_1, "2": self.model_func_2, "3": self.model_func_3,
+                                      "4": self.model_func_4, "5": self.model_func_5, "6": self.model_func_6,
+                                      "7": self.model_func_7, "8": self.model_func_8, "9": self.model_func_9}
+        self.model.buttons.button(QDialogButtonBox.Ok).clicked.connect(partial(self.model_func))
 
     def open_info(self):
 
@@ -209,7 +217,7 @@ class MainWindow(QtWidgets.QMainWindow):
             'time'].rstrip() + '000'
         variables_with_value['date'] = datetime.datetime.strptime(variables_with_value['date'], '%d-%m-%Y %H:%M:%S.%f')
         self.create_channels_menu(variables_with_value, channels_list, file_name)
-        print(variables_with_value)
+        self.variables_with_value = variables_with_value
 
     def create_channels_menu(self, data, names, file_name):
         x_coordinates = []
@@ -246,7 +254,6 @@ class MainWindow(QtWidgets.QMainWindow):
                                                                                    y=data['channel_' + str(i)])
 
             plots_dict[data['Channels'][i]].setPen(width=3)
-        self.HideButton.clicked.connect(self.hideFunc)
         return 123
 
     def testFunc(self, x, y, name, ticks):
@@ -261,18 +268,20 @@ class MainWindow(QtWidgets.QMainWindow):
         proxy.setWidget(slider)
         self.MainGraph.addItem(proxy)
         self.MainGraph.nextRow()
-        xaxis = Plot.getAxis('bottom')
-        Plot = Plot.plot(clear=True, x=x, y=y, name=name).setPen(width=3)
-        majorTicks = list(ticks.items())[::300]
-        minorTicks = list(ticks.items())
-        del minorTicks[::300]
-        xaxis.setTicks([majorTicks, minorTicks])
+        Plot.plot(clear=True, x=x, y=y, name=name).setPen(width=3)
+        if not (ticks is None):
+            xaxis = Plot.getAxis('bottom')
+            majorTicks = list(ticks.items())[::300]
+            minorTicks = list(ticks.items())
+            del minorTicks[::300]
+            xaxis.setTicks([majorTicks, minorTicks])
         # self.MainGraph.setDownsampling(auto=True)
         print('testing func')
 
     def hideFunc(self):
         if self.widget_cond:
             self.Channels.hide()
+            print('funccheckc')
             self.widget_cond = False
         else:
             self.Channels.show()
@@ -284,13 +293,218 @@ class MainWindow(QtWidgets.QMainWindow):
         return 321
 
     def model_button_clicked(self, model_num):
+        self.model_num = model_num
+        self.model_name = self.sender().text()
         self.model.text_hint.setText("<center>" + self.sender().text() + "</center><br>Введите данные:")
         for i in reversed(range(self.model.form.count())):
             self.model.form.removeRow(i)
         if self.opened_check:
             self.model.form.addRow(QLabel("Частота дискретизации:"), QLineEdit())
             self.model.form.addRow(QLabel("Кол-во отсчетов:"), QLineEdit())
+            self.opened_check = False
+        if model_num == 1 or model_num == 2:
+            self.model.form.addRow(QLabel("Задержка:"), QLineEdit())
+        if model_num == 3:
+            self.model.form.addRow(QLabel("A(0,1):"), QLineEdit())
+        if model_num == 4:
+            self.model.form.addRow(QLabel("Амплитуда:"), QLineEdit())
+            self.model.form.addRow(QLabel("Круговая частота[0,\u03C0]:"), QLineEdit())
+            self.model.form.addRow(QLabel("Начальная фаза[0,2\u03C0]:"), QLineEdit())
+        if model_num == 5 or model_num == 6:
+            self.model.form.addRow(QLabel("Период"), QLineEdit())
+        if model_num == 7:
+            self.model.form.addRow(QLabel("Амплитуда сигнала:"), QLineEdit())
+            self.model.form.addRow(QLabel("Параметр ширины огибающей:"), QLineEdit())
+            if "gerc" in self.variables_with_value:
+                self.model.form.addRow(QLabel("Частота несущей[0," + str(0.5 * self.variables_with_value["gerc"]) + "]:"),
+                                       QLineEdit())
+            else:
+                self.model.form.addRow(QLabel("Частота несущей[0," + "0.5*част.дискрет." + "]:"),
+                                       QLineEdit())
+            self.model.form.addRow(QLabel("Начальная фаза несущей:"), QLineEdit())
+        if model_num == 8:
+            self.model.form.addRow(QLabel("Амплитуда сигнала:"), QLineEdit())
+            self.model.form.addRow(QLabel("Частота огибающей:"), QLineEdit())
+            if "gerc" in self.variables_with_value:
+                self.model.form.addRow(QLabel("Частота несущей[0," + str(0.5 * self.variables_with_value["gerc"]) + "]:"),
+                                       QLineEdit())
+            else:
+                self.model.form.addRow(QLabel("Частота несущей[0," + "0.5*част.дискрет." + "]:"),
+                                       QLineEdit())
+            self.model.form.addRow(QLabel("Начальная фаза несущей:"), QLineEdit())
+        if model_num == 9:
+            self.model.form.addRow(QLabel("Амплитуда сигнала:"), QLineEdit())
+            self.model.form.addRow(QLabel("Частота огибающей:"), QLineEdit())
+            if "gerc" in self.variables_with_value:
+                self.model.form.addRow(QLabel("Частота несущей[0," + str(0.5 * self.variables_with_value["gerc"]) + "]:"),
+                                       QLineEdit())
+            else:
+                self.model.form.addRow(QLabel("Частота несущей[0," + "0.5*част.дискрет." + "]:"),
+                                       QLineEdit())
+            self.model.form.addRow(QLabel("Начальная фаза несущей:"), QLineEdit())
+            self.model.form.addRow(QLabel("Индекс глубины модуляции[0,1]:"), QLineEdit())
         self.model.show()
+
+    def model_func(self):
+        test = str(self.model_num)
+        self.model_func_dictionary[str(self.model_num)]()
+
+    def model_func_1(self):
+        x_coordinates = []
+        y_coordinates = []
+        x_value = 0
+        gercs, n = self.read_gerc_and_n()
+        n0 = int(self.model.form.itemAt(0, 1).widget().text())
+        for i in range(n):
+            x_value = x_value + i / gercs
+            x_coordinates.append(x_value)
+            if i == n0:
+                y_coordinates.append(1)
+            else:
+                y_coordinates.append(0)
+        self.draw_model(x_coordinates, y_coordinates, None)
+
+    def model_func_2(self):
+        x_coordinates = []
+        y_coordinates = []
+        x_value = 0
+        gercs, n = self.read_gerc_and_n()
+        n0 = int(self.model.form.itemAt(0, 1).widget().text())
+        for i in range(n):
+            x_value = x_value + i / gercs
+            x_coordinates.append(x_value)
+            if i >= n0:
+                y_coordinates.append(1)
+            else:
+                y_coordinates.append(0)
+        self.draw_model(x_coordinates, y_coordinates, None)
+
+    def model_func_3(self):
+        x_coordinates = []
+        y_coordinates = []
+        x_value = 0
+        gercs, n = self.read_gerc_and_n()
+        a = float(self.model.form.itemAt(0, 1).widget().text())
+        for i in range(n):
+            x_value = x_value + i / gercs
+            x_coordinates.append(x_value)
+            y_coordinates.append(pow(a, i))
+        self.draw_model(x_coordinates, y_coordinates, None)
+
+    def model_func_4(self):
+        x_coordinates = []
+        y_coordinates = []
+        x_value = 0
+        gercs, n = self.read_gerc_and_n()
+        a = int(self.model.form.itemAt(0, 1).widget().text())
+        b = float(self.model.form.itemAt(1, 1).widget().text())
+        c = float(self.model.form.itemAt(2, 1).widget().text())
+        for i in range(n):
+            x_value = x_value + i / gercs
+            x_coordinates.append(x_value)
+            y_coordinates.append(a * math.sin(i * b + c))
+        self.draw_model(x_coordinates, y_coordinates, None)
+
+    def model_func_5(self):
+        x_coordinates = []
+        y_coordinates = []
+        x_value = 0
+        gercs, n = self.read_gerc_and_n()
+        a = float(self.model.form.itemAt(0, 1).widget().text())
+        for i in range(n):
+            x_value = x_value + i / gercs
+            x_coordinates.append(x_value)
+            if (i % a) >= (a / 2):
+                y_coordinates.append(-1)
+            else:
+                y_coordinates.append(1)
+        self.draw_model(x_coordinates, y_coordinates, None)
+
+    def model_func_6(self):
+        x_coordinates = []
+        y_coordinates = []
+        x_value = 0
+        gercs, n = self.read_gerc_and_n()
+        a = int(self.model.form.itemAt(0, 1).widget().text())
+        for i in range(n):
+            x_value = x_value + i / gercs
+            x_coordinates.append(x_value)
+            y_coordinates.append((i % a)/a)
+        self.draw_model(x_coordinates, y_coordinates, None)
+
+    def model_func_7(self):
+        x_coordinates = []
+        y_coordinates = []
+        x_value = 0
+        gercs, n = self.read_gerc_and_n()
+        a = float(self.model.form.itemAt(0, 1).widget().text())
+        b = float(self.model.form.itemAt(1, 1).widget().text())
+        c = float(self.model.form.itemAt(2, 1).widget().text())
+        d = float(self.model.form.itemAt(3, 1).widget().text())
+        for i in range(n):
+            t = i / gercs
+            x_value = x_value + t
+            x_coordinates.append(x_value)
+            y_coordinates.append(a*math.exp(-t/b)*math.cos(2*math.pi*c+d))
+        self.draw_model(x_coordinates, y_coordinates, None)
+
+    def model_func_8(self):
+        x_coordinates = []
+        y_coordinates = []
+        x_value = 0
+        gercs, n = self.read_gerc_and_n()
+        a = float(self.model.form.itemAt(0, 1).widget().text())
+        b = float(self.model.form.itemAt(1, 1).widget().text())
+        c = float(self.model.form.itemAt(2, 1).widget().text())
+        d = float(self.model.form.itemAt(3, 1).widget().text())
+        for i in range(n):
+            t = i / gercs
+            x_value = x_value + t
+            x_coordinates.append(x_value)
+            y_coordinates.append(a*math.cos(2*math.pi*b*t)*math.cos(2*math.pi*c*t+d))
+        self.draw_model(x_coordinates, y_coordinates, None)
+
+    def model_func_9(self):
+        x_coordinates = []
+        y_coordinates = []
+        x_value = 0
+        gercs, n = self.read_gerc_and_n()
+        a = float(self.model.form.itemAt(0, 1).widget().text())
+        b = float(self.model.form.itemAt(1, 1).widget().text())
+        c = float(self.model.form.itemAt(2, 1).widget().text())
+        d = float(self.model.form.itemAt(3, 1).widget().text())
+        e = float(self.model.form.itemAt(4, 1).widget().text())
+        for i in range(n):
+            t = i / gercs
+            x_value = x_value + t
+            x_coordinates.append(x_value)
+            y_coordinates.append(a*(1+e*math.cos(2*math.pi*b*t))*math.cos(2*math.pi*c*t+d))
+        self.draw_model(x_coordinates, y_coordinates, None)
+
+    def read_gerc_and_n(self):
+        if "gerc" in self.variables_with_value:
+            gercs = self.variables_with_value["gerc"]
+            n = self.variables_with_value["n"]
+        else:
+            gercs = float(self.model.form.itemAt(0, 1).widget().text())
+            n = int(self.model.form.itemAt(1, 1).widget().text())
+            self.variables_with_value["gerc"] = gercs
+            self.variables_with_value["n"] = n
+            self.model.form.removeRow(0)
+            self.model.form.removeRow(0)
+        return gercs, n
+
+    def draw_model(self, x, y, ticks):
+        plot = self.Channels.addPlot(x=x, y=y, title=self.model_name)
+        plot.showAxis("right")
+        plot.showAxis("bottom")
+        plot.getAxis('top').setStyle(showValues=False)
+        plot.getAxis('bottom').setStyle(showValues=False)
+        plot.getAxis('left').setStyle(showValues=False)
+        plot.getAxis('right').setStyle(showValues=False)
+        self.Channels.nextRow()
+        plot.autoBtn.clicked.connect(
+            partial(self.testFunc, x, y, self.model_name, ticks))
 
 
 def main():
