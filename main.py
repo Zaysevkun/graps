@@ -363,7 +363,7 @@ class MainWindow(QtWidgets.QMainWindow):
         n0 = int(self.model.form.itemAt(0, 1).widget().text())
         for i in range(n):
             x_value = x_value + i / gercs
-            x_coordinates.append(x_value)
+            x_coordinates.append(i)
             if i == n0:
                 y_coordinates.append(1)
             else:
@@ -378,7 +378,7 @@ class MainWindow(QtWidgets.QMainWindow):
         n0 = int(self.model.form.itemAt(0, 1).widget().text())
         for i in range(n):
             x_value = x_value + i / gercs
-            x_coordinates.append(x_value)
+            x_coordinates.append(i)
             if i >= n0:
                 y_coordinates.append(1)
             else:
@@ -393,7 +393,7 @@ class MainWindow(QtWidgets.QMainWindow):
         a = float(self.model.form.itemAt(0, 1).widget().text())
         for i in range(n):
             x_value = x_value + i / gercs
-            x_coordinates.append(x_value)
+            x_coordinates.append(i)
             y_coordinates.append(pow(a, i))
         self.draw_model(x_coordinates, y_coordinates, None)
 
@@ -407,7 +407,7 @@ class MainWindow(QtWidgets.QMainWindow):
         c = float(self.model.form.itemAt(2, 1).widget().text())
         for i in range(n):
             x_value = x_value + i / gercs
-            x_coordinates.append(x_value)
+            x_coordinates.append(i)
             y_coordinates.append(a * math.sin(i * b + c))
         self.draw_model(x_coordinates, y_coordinates, None)
 
@@ -419,7 +419,7 @@ class MainWindow(QtWidgets.QMainWindow):
         a = float(self.model.form.itemAt(0, 1).widget().text())
         for i in range(n):
             x_value = x_value + i / gercs
-            x_coordinates.append(x_value)
+            x_coordinates.append(i)
             if (i % a) >= (a / 2):
                 y_coordinates.append(-1)
             else:
@@ -434,7 +434,7 @@ class MainWindow(QtWidgets.QMainWindow):
         a = int(self.model.form.itemAt(0, 1).widget().text())
         for i in range(n):
             x_value = x_value + i / gercs
-            x_coordinates.append(x_value)
+            x_coordinates.append(i)
             y_coordinates.append((i % a)/a)
         self.draw_model(x_coordinates, y_coordinates, None)
 
@@ -450,8 +450,8 @@ class MainWindow(QtWidgets.QMainWindow):
         for i in range(n):
             t = i / gercs
             x_value = x_value + t
-            x_coordinates.append(x_value)
-            y_coordinates.append(a*math.exp(-t/b)*math.cos(2*math.pi*c+d))
+            x_coordinates.append(t)
+            y_coordinates.append(a*math.exp(-t/b)*math.cos(2*math.pi*c*t+d))
         self.draw_model(x_coordinates, y_coordinates, None)
 
     def model_func_8(self):
@@ -466,7 +466,7 @@ class MainWindow(QtWidgets.QMainWindow):
         for i in range(n):
             t = i / gercs
             x_value = x_value + t
-            x_coordinates.append(x_value)
+            x_coordinates.append(t)
             y_coordinates.append(a*math.cos(2*math.pi*b*t)*math.cos(2*math.pi*c*t+d))
         self.draw_model(x_coordinates, y_coordinates, None)
 
@@ -483,7 +483,7 @@ class MainWindow(QtWidgets.QMainWindow):
         for i in range(n):
             t = i / gercs
             x_value = x_value + t
-            x_coordinates.append(x_value)
+            x_coordinates.append(t)
             y_coordinates.append(a*(1+e*math.cos(2*math.pi*b*t))*math.cos(2*math.pi*c*t+d))
         self.draw_model(x_coordinates, y_coordinates, None)
 
@@ -504,13 +504,14 @@ class MainWindow(QtWidgets.QMainWindow):
         self.variables_with_value["k1"] += 1
         self.variables_with_value['Channels1'].append(self.model_name)
         plot = self.Channels.addPlot(x=x, y=y, title=self.model_name)
+        plot.setDownsampling(auto=True)
         plot.showAxis("right")
         plot.showAxis("bottom")
         plot.getAxis('top').setStyle(showValues=False)
         plot.getAxis('bottom').setStyle(showValues=False)
         plot.getAxis('left').setStyle(showValues=False)
         plot.getAxis('right').setStyle(showValues=False)
-        self.plots_dict[self.model_name] = plot.plot(x=x, y=y, title=self.model_name)
+        self.plots_dict[self.model_name] = plot.plot(clear=True, x=x, y=y, title=self.model_name)
         self.Channels.nextRow()
         plot.autoBtn.clicked.connect(
             partial(self.testFunc, x, y, self.model_name, ticks))
@@ -531,7 +532,7 @@ class MainWindow(QtWidgets.QMainWindow):
             time = self.variables_with_value["time"].rstrip()
         else:
             date = "01-01-2000"
-            time = "00:00:00"
+            time = "00:00:00.000"
         channels = ';'.join(self.variables_with_value["Channels1"])
         # channels.rstrip()
         text = "# channels number\n" \
