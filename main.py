@@ -6,10 +6,11 @@ import pyqtgraph as pg
 from functools import partial
 import datetime
 import sys
+import random
 
 from PyQt5.QtGui import QFont
 from PyQt5.QtCore import Qt
-from PyQt5.QtWidgets import QSlider, QLabel, QLineEdit, QDialogButtonBox
+from PyQt5.QtWidgets import QSlider, QLabel, QLineEdit, QDialogButtonBox, QCheckBox, QComboBox
 
 MAXVAL = 650000
 
@@ -152,9 +153,13 @@ class MainWindow(QtWidgets.QMainWindow):
         self.model_7.triggered.connect(partial(self.model_button_clicked, 7))
         self.model_8.triggered.connect(partial(self.model_button_clicked, 8))
         self.model_9.triggered.connect(partial(self.model_button_clicked, 9))
+        self.model_10.triggered.connect(partial(self.model_button_clicked, 10))
+        self.model_11.triggered.connect(partial(self.model_button_clicked, 11))
+        self.model_12.triggered.connect(partial(self.model_button_clicked, 12))
+        self.superpos.triggered.connect(partial(self.model_button_clicked, 13))
         self.model_func_dictionary = {"1": self.model_func_1, "2": self.model_func_2, "3": self.model_func_3,
                                       "4": self.model_func_4, "5": self.model_func_5, "6": self.model_func_6,
-                                      "7": self.model_func_7, "8": self.model_func_8, "9": self.model_func_9}
+                                      "7": self.model_func_7, "8": self.model_func_8, "9": self.model_func_9, "10": self.model_func_10, "11": self.model_func_11, "12": self.model_func_12, "13": self.superpos_func}
         self.model.buttons.button(QDialogButtonBox.Ok).clicked.connect(partial(self.model_func))
         self.fileSave.triggered.connect(partial(self.save_func))
 
@@ -349,6 +354,26 @@ class MainWindow(QtWidgets.QMainWindow):
                                        QLineEdit())
             self.model.form.addRow(QLabel("Начальная фаза несущей:"), QLineEdit())
             self.model.form.addRow(QLabel("Индекс глубины модуляции[0,1]:"), QLineEdit())
+        if model_num == 10:
+            self.model.form.addRow(QLabel("a:"), QLineEdit())
+            self.model.form.addRow(QLabel("b:"), QLineEdit())
+        if model_num == 11:
+            self.model.form.addRow(QLabel("среднее \u03B1:"), QLineEdit())
+            self.model.form.addRow(QLabel("дисперсия \u03C3:"), QLineEdit())
+        if model_num == 12:
+            self.model.form.addRow(QLabel("дисперсия \u03C3:"), QLineEdit())
+            self.model.form.addRow(QLabel("P:"), QLineEdit())
+            self.model.form.addRow(QLabel("Q:"), QLineEdit())
+            self.model.form.addRow(QLabel("a(a1,a2,...):"), QLineEdit())
+            self.model.form.addRow(QLabel("b(b1,b2,...):"), QLineEdit())
+        if model_num == 13:
+            combo = QComboBox()
+            types = ["суперпозиция с произвольными коэффициентами", "мультипликативная суперпозиция"]
+            self.model.form.addRow(QLabel("тип:"), combo)
+            combo.addItems(types)
+            self.model.form.addRow(QLabel("a(a0,a1,a2,...):"), QLineEdit())
+            for i in range(self.variables_with_value["k1"]):
+                self.model.form.addRow(QLabel(self.variables_with_value["Channels1"][i] + ":"), QCheckBox())
         self.model.show()
 
     def model_func(self):
@@ -402,7 +427,7 @@ class MainWindow(QtWidgets.QMainWindow):
         y_coordinates = []
         x_value = 0
         gercs, n = self.read_gerc_and_n()
-        a = int(self.model.form.itemAt(0, 1).widget().text())
+        a = float(self.model.form.itemAt(0, 1).widget().text())
         b = float(self.model.form.itemAt(1, 1).widget().text())
         c = float(self.model.form.itemAt(2, 1).widget().text())
         for i in range(n):
@@ -487,6 +512,69 @@ class MainWindow(QtWidgets.QMainWindow):
             y_coordinates.append(a*(1+e*math.cos(2*math.pi*b*t))*math.cos(2*math.pi*c*t+d))
         self.draw_model(x_coordinates, y_coordinates, None)
 
+    def model_func_10(self):
+        x_coordinates = []
+        y_coordinates = []
+        x_value = 0
+        gercs, n = self.read_gerc_and_n()
+        a = float(self.model.form.itemAt(0, 1).widget().text())
+        b = float(self.model.form.itemAt(1, 1).widget().text())
+        for i in range(n):
+            t = i / gercs
+            x_value = x_value + t
+            x_coordinates.append(t)
+            y_coordinates.append(a+(b-a)*random.random())
+        self.draw_model(x_coordinates, y_coordinates, None)
+
+    def model_func_11(self):
+        x_coordinates = []
+        y_coordinates = []
+        x_value = 0
+        gercs, n = self.read_gerc_and_n()
+        alpha = float(self.model.form.itemAt(0, 1).widget().text())
+        sigma = float(self.model.form.itemAt(1, 1).widget().text())
+        for i in range(n):
+            eta = 0
+            t = i / gercs
+            x_value = x_value + t
+            x_coordinates.append(t)
+            for j in range(1, 12):
+                eta += random.random() - 6
+            y_coordinates.append(alpha + sigma * eta)
+        self.draw_model(x_coordinates, y_coordinates, None)
+
+    def model_func_12(self):
+        x_coordinates = []
+        y_coordinates = []
+        x_value = 0
+        eta = 0
+        eta_list = []
+        eta = []
+        gercs, n = self.read_gerc_and_n()
+        sigma = float(self.model.form.itemAt(0, 1).widget().text())
+        p = int(self.model.form.itemAt(1, 1).widget().text())
+        q = int(self.model.form.itemAt(2, 1).widget().text())
+        a = str(self.model.form.itemAt(3, 1).widget().text()).split(",")
+        b = str(self.model.form.itemAt(4, 1).widget().text()).split(",")
+        for i in range(n):
+            p_sum = 0
+            q_sum = 0
+            eta_temp = 0
+            t = i / gercs
+            x_value = x_value + t
+            x_coordinates.append(t)
+            for j in range(1, 12):
+                eta_temp += random.random() - 6
+            eta.append(eta_temp*sigma)
+            for j in range(1, p):
+                if i-j >= 0 and i != 0:
+                    p_sum += float(a[j])*eta[i-j]
+            for j in range(1, q):
+                if i-j >= 0 and i != 0:
+                    q_sum += float(b[j])*y_coordinates[i-j]
+            y_coordinates.append(eta[i]+p_sum+q_sum)
+        self.draw_model(x_coordinates, y_coordinates, None)
+
     def read_gerc_and_n(self):
         if "gerc" in self.variables_with_value:
             gercs = self.variables_with_value["gerc"]
@@ -545,6 +633,34 @@ class MainWindow(QtWidgets.QMainWindow):
                 text += str(self.plots_dict[self.variables_with_value["Channels1"][j]].yData[i]) + " "
             text += "\n"
         return text
+
+    def superpos_func(self):
+        # self.model_name = self.model.form.itemAt(0, 1).widget().currentText() + "(" +
+        x_coordinates = []
+        y_coordinates = []
+        checkboxes = []
+        x_value = 0
+        gercs, n = self.read_gerc_and_n()
+        superpos_type = self.model.form.itemAt(0, 1).widget().currentIndex()
+        a = str(self.model.form.itemAt(1, 1).widget().text()).split(",")
+        for i in range(self.variables_with_value["k1"]):
+            checkboxes.append(self.model.form.itemAt(i+2, 1).widget().isChecked())
+        for i in range(n):
+            y_value = float(a[0])
+            x_value = x_value + i / gercs
+            x_coordinates.append(i)
+            if superpos_type == 0:
+                counter = 1
+                for j in range(self.variables_with_value["k1"]):
+                    if checkboxes[j]:
+                        y_value += float(a[counter]) * self.plots_dict[self.variables_with_value["Channels1"][j]].yData[i]
+                        counter += 1
+            else:
+                for j in range(self.variables_with_value["k1"]):
+                    if checkboxes[j]:
+                        y_value *= self.plots_dict[self.variables_with_value["Channels1"][j]].yData[i]
+            y_coordinates.append(y_value)
+        self.draw_model(x_coordinates, y_coordinates, None)
 
 def main():
     app = QtWidgets.QApplication(sys.argv)

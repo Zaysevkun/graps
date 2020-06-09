@@ -126,6 +126,7 @@
       <string>Инструменты</string>
      </property>
      <addaction name="SignalInfo"/>
+     <addaction name="superpos"/>
     </widget>
     <widget class="QMenu" name="menu_6">
      <property name="title">
@@ -141,6 +142,10 @@
      <addaction name="model_7"/>
      <addaction name="model_8"/>
      <addaction name="model_9"/>
+     <addaction name="separator"/>
+     <addaction name="model_10"/>
+     <addaction name="model_11"/>
+     <addaction name="model_12"/>
     </widget>
     <addaction name="menu_5"/>
     <addaction name="menu_6"/>
@@ -235,6 +240,26 @@
   <action name="fileSave">
    <property name="text">
     <string>Сохранить</string>
+   </property>
+  </action>
+  <action name="model_10">
+   <property name="text">
+    <string>белый шум,равномерно распределенный</string>
+   </property>
+  </action>
+  <action name="model_11">
+   <property name="text">
+    <string>белый шум,распределенный по нормальному закону</string>
+   </property>
+  </action>
+  <action name="model_12">
+   <property name="text">
+    <string>случайный сигнал авторегрессии</string>
+   </property>
+  </action>
+  <action name="superpos">
+   <property name="text">
+    <string>Суперпозиция</string>
    </property>
   </action>
  </widget>

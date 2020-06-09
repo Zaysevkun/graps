@@ -3,10 +3,6 @@
    'C:\\Program '
    'Files\\Python38\\lib\\site-packages\\pkg_resources\\__init__.py',
    'PYMODULE'),
-  ('pkg_resources._vendor.packaging.markers',
-   'C:\\Program '
-   'Files\\Python38\\lib\\site-packages\\pkg_resources\\_vendor\\packaging\\markers.py',
-   'PYMODULE'),
   ('pkg_resources._vendor.packaging.__about__',
    'C:\\Program '
    'Files\\Python38\\lib\\site-packages\\pkg_resources\\_vendor\\packaging\\__about__.py',
@@ -16,31 +12,22 @@
    'Files\\Python38\\lib\\site-packages\\pkg_resources\\_vendor\\six.py',
    'PYMODULE'),
   ('struct', 'C:\\Program Files\\Python38\\lib\\struct.py', 'PYMODULE'),
-  ('pkg_resources._vendor.packaging._structures',
+  ('pkg_resources._vendor.packaging.specifiers',
    'C:\\Program '
-   'Files\\Python38\\lib\\site-packages\\pkg_resources\\_vendor\\packaging\\_structures.py',
-   'PYMODULE'),
-  ('pkg_resources._vendor.packaging.version',
-   'C:\\Program '
-   'Files\\Python38\\lib\\site-packages\\pkg_resources\\_vendor\\packaging\\version.py',
-   'PYMODULE'),
-  ('pkg_resources._vendor.packaging._compat',
-   'C:\\Program '
-   'Files\\Python38\\lib\\site-packages\\pkg_resources\\_vendor\\packaging\\_compat.py',
-   'PYMODULE'),
-  ('pkg_resources._vendor.packaging',
-   'C:\\Program '
-   'Files\\Python38\\lib\\site-packages\\pkg_resources\\_vendor\\packaging\\__init__.py',
+   'Files\\Python38\\lib\\site-packages\\pkg_resources\\_vendor\\packaging\\specifiers.py',
    'PYMODULE'),
   ('pkg_resources._vendor.packaging.utils',
    'C:\\Program '
    'Files\\Python38\\lib\\site-packages\\pkg_resources\\_vendor\\packaging\\utils.py',
    'PYMODULE'),
-  ('pkg_resources._vendor.packaging.requirements',
+  ('pkg_resources._vendor.packaging.version',
    'C:\\Program '
-   'Files\\Python38\\lib\\site-packages\\pkg_resources\\_vendor\\packaging\\requirements.py',
+   'Files\\Python38\\lib\\site-packages\\pkg_resources\\_vendor\\packaging\\version.py',
    'PYMODULE'),
-  ('string', 'C:\\Program Files\\Python38\\lib\\string.py', 'PYMODULE'),
+  ('pkg_resources._vendor.packaging.markers',
+   'C:\\Program '
+   'Files\\Python38\\lib\\site-packages\\pkg_resources\\_vendor\\packaging\\markers.py',
+   'PYMODULE'),
   ('pkg_resources._vendor.appdirs',
    'C:\\Program '
    'Files\\Python38\\lib\\site-packages\\pkg_resources\\_vendor\\appdirs.py',
@@ -51,13 +38,13 @@
   ('ctypes._endian',
    'C:\\Program Files\\Python38\\lib\\ctypes\\_endian.py',
    'PYMODULE'),
+  ('pkg_resources._vendor.packaging._compat',
+   'C:\\Program '
+   'Files\\Python38\\lib\\site-packages\\pkg_resources\\_vendor\\packaging\\_compat.py',
+   'PYMODULE'),
   ('pkg_resources._vendor',
    'C:\\Program '
    'Files\\Python38\\lib\\site-packages\\pkg_resources\\_vendor\\__init__.py',
-   'PYMODULE'),
-  ('pkg_resources._vendor.packaging.specifiers',
-   'C:\\Program '
-   'Files\\Python38\\lib\\site-packages\\pkg_resources\\_vendor\\packaging\\specifiers.py',
    'PYMODULE'),
   ('pkg_resources._vendor.pyparsing',
    'C:\\Program '
@@ -577,7 +564,6 @@
   ('_compat_pickle',
    'C:\\Program Files\\Python38\\lib\\_compat_pickle.py',
    'PYMODULE'),
-  ('random', 'C:\\Program Files\\Python38\\lib\\random.py', 'PYMODULE'),
   ('ctypes.util',
    'C:\\Program Files\\Python38\\lib\\ctypes\\util.py',
    'PYMODULE'),
@@ -631,6 +617,19 @@
    'PYMODULE'),
   ('pprint', 'C:\\Program Files\\Python38\\lib\\pprint.py', 'PYMODULE'),
   ('copy', 'C:\\Program Files\\Python38\\lib\\copy.py', 'PYMODULE'),
+  ('string', 'C:\\Program Files\\Python38\\lib\\string.py', 'PYMODULE'),
+  ('pkg_resources._vendor.packaging.requirements',
+   'C:\\Program '
+   'Files\\Python38\\lib\\site-packages\\pkg_resources\\_vendor\\packaging\\requirements.py',
+   'PYMODULE'),
+  ('pkg_resources._vendor.packaging',
+   'C:\\Program '
+   'Files\\Python38\\lib\\site-packages\\pkg_resources\\_vendor\\packaging\\__init__.py',
+   'PYMODULE'),
+  ('pkg_resources._vendor.packaging._structures',
+   'C:\\Program '
+   'Files\\Python38\\lib\\site-packages\\pkg_resources\\_vendor\\packaging\\_structures.py',
+   'PYMODULE'),
   ('sysconfig', 'C:\\Program Files\\Python38\\lib\\sysconfig.py', 'PYMODULE'),
   ('pkg_resources.py31compat',
    'C:\\Program '
@@ -667,8 +666,9 @@
   ('zipfile', 'C:\\Program Files\\Python38\\lib\\zipfile.py', 'PYMODULE'),
   ('_strptime', 'C:\\Program Files\\Python38\\lib\\_strptime.py', 'PYMODULE'),
   ('__future__', 'C:\\Program Files\\Python38\\lib\\__future__.py', 'PYMODULE'),
-  ('stringprep', 'C:\\Program Files\\Python38\\lib\\stringprep.py', 'PYMODULE'),
   ('_py_abc', 'C:\\Program Files\\Python38\\lib\\_py_abc.py', 'PYMODULE'),
+  ('stringprep', 'C:\\Program Files\\Python38\\lib\\stringprep.py', 'PYMODULE'),
+  ('random', 'C:\\Program Files\\Python38\\lib\\random.py', 'PYMODULE'),
   ('datetime', 'C:\\Program Files\\Python38\\lib\\datetime.py', 'PYMODULE'),
   ('pyqtgraph',
    'c:\\users\\zayse\\desktop\\graps\\venv\\lib\\site-packages\\pyqtgraph\\__init__.py',
@@ -864,6 +864,30 @@
    'C:\\Program '
    'Files\\Python38\\lib\\site-packages\\setuptools\\_vendor\\packaging\\specifiers.py',
    'PYMODULE'),
+  ('setuptools._vendor.packaging._structures',
+   'C:\\Program '
+   'Files\\Python38\\lib\\site-packages\\setuptools\\_vendor\\packaging\\_structures.py',
+   'PYMODULE'),
+  ('setuptools._vendor.packaging.requirements',
+   'C:\\Program '
+   'Files\\Python38\\lib\\site-packages\\setuptools\\_vendor\\packaging\\requirements.py',
+   'PYMODULE'),
+  ('setuptools._vendor.packaging._compat',
+   'C:\\Program '
+   'Files\\Python38\\lib\\site-packages\\setuptools\\_vendor\\packaging\\_compat.py',
+   'PYMODULE'),
+  ('setuptools._vendor.packaging.markers',
+   'C:\\Program '
+   'Files\\Python38\\lib\\site-packages\\setuptools\\_vendor\\packaging\\markers.py',
+   'PYMODULE'),
+  ('setuptools._vendor.packaging.__about__',
+   'C:\\Program '
+   'Files\\Python38\\lib\\site-packages\\setuptools\\_vendor\\packaging\\__about__.py',
+   'PYMODULE'),
+  ('setuptools._vendor.packaging.version',
+   'C:\\Program '
+   'Files\\Python38\\lib\\site-packages\\setuptools\\_vendor\\packaging\\version.py',
+   'PYMODULE'),
   ('setuptools._vendor.pyparsing',
    'C:\\Program '
    'Files\\Python38\\lib\\site-packages\\setuptools\\_vendor\\pyparsing.py',
@@ -872,41 +896,17 @@
    'C:\\Program '
    'Files\\Python38\\lib\\site-packages\\setuptools\\_vendor\\six.py',
    'PYMODULE'),
-  ('setuptools._vendor.packaging',
-   'C:\\Program '
-   'Files\\Python38\\lib\\site-packages\\setuptools\\_vendor\\packaging\\__init__.py',
-   'PYMODULE'),
   ('setuptools._vendor.packaging.utils',
    'C:\\Program '
    'Files\\Python38\\lib\\site-packages\\setuptools\\_vendor\\packaging\\utils.py',
-   'PYMODULE'),
-  ('setuptools._vendor.packaging.markers',
-   'C:\\Program '
-   'Files\\Python38\\lib\\site-packages\\setuptools\\_vendor\\packaging\\markers.py',
-   'PYMODULE'),
-  ('setuptools._vendor.packaging.requirements',
-   'C:\\Program '
-   'Files\\Python38\\lib\\site-packages\\setuptools\\_vendor\\packaging\\requirements.py',
    'PYMODULE'),
   ('setuptools._vendor',
    'C:\\Program '
    'Files\\Python38\\lib\\site-packages\\setuptools\\_vendor\\__init__.py',
    'PYMODULE'),
-  ('setuptools._vendor.packaging.__about__',
+  ('setuptools._vendor.packaging',
    'C:\\Program '
-   'Files\\Python38\\lib\\site-packages\\setuptools\\_vendor\\packaging\\__about__.py',
-   'PYMODULE'),
-  ('setuptools._vendor.packaging._structures',
-   'C:\\Program '
-   'Files\\Python38\\lib\\site-packages\\setuptools\\_vendor\\packaging\\_structures.py',
-   'PYMODULE'),
-  ('setuptools._vendor.packaging._compat',
-   'C:\\Program '
-   'Files\\Python38\\lib\\site-packages\\setuptools\\_vendor\\packaging\\_compat.py',
-   'PYMODULE'),
-  ('setuptools._vendor.packaging.version',
-   'C:\\Program '
-   'Files\\Python38\\lib\\site-packages\\setuptools\\_vendor\\packaging\\version.py',
+   'Files\\Python38\\lib\\site-packages\\setuptools\\_vendor\\packaging\\__init__.py',
    'PYMODULE'),
   ('setuptools.msvc',
    'C:\\Program Files\\Python38\\lib\\site-packages\\setuptools\\msvc.py',
