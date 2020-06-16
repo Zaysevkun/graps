@@ -120,6 +120,19 @@ class ModelWindow(QtWidgets.QDialog):
         uic.loadUi('design_model_window.ui', self)
 
 
+class StatWindow(QtWidgets.QDialog):
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        # Load the UI Page
+        # pg.setConfigOption('background', 'w')
+        uic.loadUi('design_stat.ui', self)
+        self.hystogram.setBackground(background=None)
+        self.hystogram.showAxis("left", show=False)
+        self.hystogram.showAxis("bottom", show=False)
+
+
 class MainWindow(QtWidgets.QMainWindow):
     variables_with_value = {}
     plots_dict = {}
@@ -136,6 +149,7 @@ class MainWindow(QtWidgets.QMainWindow):
         uic.loadUi('design.ui', self)
         self.dialog = InfoWindow(self)
         self.model = ModelWindow(self)
+        self.stat = StatWindow(self)
         self.Channels.setBackground(background=None)
         self.MainGraph.setBackground(background=None)
         self.FileOpen.triggered.connect(self.browse_folder)
@@ -157,9 +171,12 @@ class MainWindow(QtWidgets.QMainWindow):
         self.model_11.triggered.connect(partial(self.model_button_clicked, 11))
         self.model_12.triggered.connect(partial(self.model_button_clicked, 12))
         self.superpos.triggered.connect(partial(self.model_button_clicked, 13))
+        self.stats.triggered.connect(partial(self.model_button_clicked, 14))
         self.model_func_dictionary = {"1": self.model_func_1, "2": self.model_func_2, "3": self.model_func_3,
                                       "4": self.model_func_4, "5": self.model_func_5, "6": self.model_func_6,
-                                      "7": self.model_func_7, "8": self.model_func_8, "9": self.model_func_9, "10": self.model_func_10, "11": self.model_func_11, "12": self.model_func_12, "13": self.superpos_func}
+                                      "7": self.model_func_7, "8": self.model_func_8, "9": self.model_func_9,
+                                      "10": self.model_func_10, "11": self.model_func_11, "12": self.model_func_12,
+                                      "13": self.superpos_func, "14": self.stat_func}
         self.model.buttons.button(QDialogButtonBox.Ok).clicked.connect(partial(self.model_func))
         self.fileSave.triggered.connect(partial(self.save_func))
 
@@ -219,15 +236,18 @@ class MainWindow(QtWidgets.QMainWindow):
 
         self.variables_with_value['Channels'] = self.variables_with_value['Channels'].rstrip()
         self.variables_with_value['Channels'] = self.variables_with_value['Channels'].split(';')
-        self.variables_with_value["Channels1"] = self.variables_with_value["Channels"] + self.variables_with_value["Channels1"]
+        self.variables_with_value["Channels1"] = self.variables_with_value["Channels"] + self.variables_with_value[
+            "Channels1"]
         self.variables_with_value['k'] = int(self.variables_with_value['k'])
         self.variables_with_value['k1'] += self.variables_with_value['k']
         self.variables_with_value['n'] = int(self.variables_with_value['n'])
         self.variables_with_value['gerc'] = float(self.variables_with_value['gerc'])
         self.variables_with_value['date1'] = self.variables_with_value['date'].rstrip()
-        self.variables_with_value['date'] = self.variables_with_value['date'].rstrip() + ' ' + self.variables_with_value[
-            'time'].rstrip() + '000'
-        self.variables_with_value['date'] = datetime.datetime.strptime(self.variables_with_value['date'], '%d-%m-%Y %H:%M:%S.%f')
+        self.variables_with_value['date'] = self.variables_with_value['date'].rstrip() + ' ' + \
+                                            self.variables_with_value[
+                                                'time'].rstrip() + '000'
+        self.variables_with_value['date'] = datetime.datetime.strptime(self.variables_with_value['date'],
+                                                                       '%d-%m-%Y %H:%M:%S.%f')
         self.create_channels_menu(self.variables_with_value, channels_list, file_name)
 
     def create_channels_menu(self, data, names, file_name):
@@ -248,11 +268,11 @@ class MainWindow(QtWidgets.QMainWindow):
         # plots_dict[data['Channels'][i]] = self.Channels.setBorder(width=3)
         for i in range(data['k']):
             self.plots_dict[data['Channels'][i]] = self.Channels.addPlot(x=x_coordinates, y=data['channel_' + str(i)],
-                                                                    title=data['Channels'][i])
+                                                                         title=data['Channels'][i])
             self.plots_dict[data['Channels'][i]].setDownsampling(auto=True)
             self.plots_dict[data['Channels'][i]].showAxis('right')
             self.plots_dict[data['Channels'][i]].showAxis('top')
-
+            #self.plots_dict[data["Channels"][i]].setMouseEnabled(x=False, y=False)
             self.plots_dict[data['Channels'][i]].getAxis('top').setStyle(showValues=False)
             self.plots_dict[data['Channels'][i]].getAxis('left').setStyle(showValues=False)
             self.plots_dict[data['Channels'][i]].getAxis('right').setStyle(showValues=False)
@@ -261,14 +281,19 @@ class MainWindow(QtWidgets.QMainWindow):
             self.Channels.nextRow()
             self.plots_dict[data['Channels'][i]].autoBtn.clicked.connect(
                 partial(self.testFunc, x_coordinates, data['channel_' + str(i)], data['Channels'][i], ticks))
-            self.plots_dict[data['Channels'][i]] = self.plots_dict[data['Channels'][i]].plot(clear=True, x=x_coordinates,
-                                                                                    y=data['channel_' + str(i)])
+            self.plots_dict[data['Channels'][i]] = self.plots_dict[data['Channels'][i]].plot(clear=True,
+                                                                                             x=x_coordinates,
+                                                                                             y=data[
+                                                                                                 'channel_' + str(i)])
 
             self.plots_dict[data['Channels'][i]].setPen(width=3)
         return 123
 
     def testFunc(self, x, y, name, ticks):
         Plot = self.MainGraph.addPlot(clear=True, x=x, y=y, name=name, title=name)
+        view = Plot.getViewBox()
+        view.setMouseMode(pg.ViewBox.RectMode)
+        view.setMouseEnabled(x=True, y=False)
         self.MainGraph.nextRow()
         slider = RangeSliderClass()
         slider.minTime = x[0]
@@ -327,8 +352,9 @@ class MainWindow(QtWidgets.QMainWindow):
             self.model.form.addRow(QLabel("Амплитуда сигнала:"), QLineEdit())
             self.model.form.addRow(QLabel("Параметр ширины огибающей:"), QLineEdit())
             if "gerc" in self.variables_with_value:
-                self.model.form.addRow(QLabel("Частота несущей[0," + str(0.5 * self.variables_with_value["gerc"]) + "]:"),
-                                       QLineEdit())
+                self.model.form.addRow(
+                    QLabel("Частота несущей[0," + str(0.5 * self.variables_with_value["gerc"]) + "]:"),
+                    QLineEdit())
             else:
                 self.model.form.addRow(QLabel("Частота несущей[0," + "0.5*част.дискрет." + "]:"),
                                        QLineEdit())
@@ -337,8 +363,9 @@ class MainWindow(QtWidgets.QMainWindow):
             self.model.form.addRow(QLabel("Амплитуда сигнала:"), QLineEdit())
             self.model.form.addRow(QLabel("Частота огибающей:"), QLineEdit())
             if "gerc" in self.variables_with_value:
-                self.model.form.addRow(QLabel("Частота несущей[0," + str(0.5 * self.variables_with_value["gerc"]) + "]:"),
-                                       QLineEdit())
+                self.model.form.addRow(
+                    QLabel("Частота несущей[0," + str(0.5 * self.variables_with_value["gerc"]) + "]:"),
+                    QLineEdit())
             else:
                 self.model.form.addRow(QLabel("Частота несущей[0," + "0.5*част.дискрет." + "]:"),
                                        QLineEdit())
@@ -347,8 +374,9 @@ class MainWindow(QtWidgets.QMainWindow):
             self.model.form.addRow(QLabel("Амплитуда сигнала:"), QLineEdit())
             self.model.form.addRow(QLabel("Частота огибающей:"), QLineEdit())
             if "gerc" in self.variables_with_value:
-                self.model.form.addRow(QLabel("Частота несущей[0," + str(0.5 * self.variables_with_value["gerc"]) + "]:"),
-                                       QLineEdit())
+                self.model.form.addRow(
+                    QLabel("Частота несущей[0," + str(0.5 * self.variables_with_value["gerc"]) + "]:"),
+                    QLineEdit())
             else:
                 self.model.form.addRow(QLabel("Частота несущей[0," + "0.5*част.дискрет." + "]:"),
                                        QLineEdit())
@@ -374,6 +402,11 @@ class MainWindow(QtWidgets.QMainWindow):
             self.model.form.addRow(QLabel("a(a0,a1,a2,...):"), QLineEdit())
             for i in range(self.variables_with_value["k1"]):
                 self.model.form.addRow(QLabel(self.variables_with_value["Channels1"][i] + ":"), QCheckBox())
+        if model_num == 14:
+            combo = QComboBox()
+            self.model.form.addRow(QLabel("Сигнал:"), combo)
+            combo.addItems(self.variables_with_value["Channels1"])
+            self.model.form.addRow(QLabel("K:"), QLineEdit())
         self.model.show()
 
     def model_func(self):
@@ -460,7 +493,7 @@ class MainWindow(QtWidgets.QMainWindow):
         for i in range(n):
             x_value = x_value + i / gercs
             x_coordinates.append(i)
-            y_coordinates.append((i % a)/a)
+            y_coordinates.append((i % a) / a)
         self.draw_model(x_coordinates, y_coordinates, None)
 
     def model_func_7(self):
@@ -476,7 +509,7 @@ class MainWindow(QtWidgets.QMainWindow):
             t = i / gercs
             x_value = x_value + t
             x_coordinates.append(t)
-            y_coordinates.append(a*math.exp(-t/b)*math.cos(2*math.pi*c*t+d))
+            y_coordinates.append(a * math.exp(-t / b) * math.cos(2 * math.pi * c * t + d))
         self.draw_model(x_coordinates, y_coordinates, None)
 
     def model_func_8(self):
@@ -492,7 +525,7 @@ class MainWindow(QtWidgets.QMainWindow):
             t = i / gercs
             x_value = x_value + t
             x_coordinates.append(t)
-            y_coordinates.append(a*math.cos(2*math.pi*b*t)*math.cos(2*math.pi*c*t+d))
+            y_coordinates.append(a * math.cos(2 * math.pi * b * t) * math.cos(2 * math.pi * c * t + d))
         self.draw_model(x_coordinates, y_coordinates, None)
 
     def model_func_9(self):
@@ -509,7 +542,7 @@ class MainWindow(QtWidgets.QMainWindow):
             t = i / gercs
             x_value = x_value + t
             x_coordinates.append(t)
-            y_coordinates.append(a*(1+e*math.cos(2*math.pi*b*t))*math.cos(2*math.pi*c*t+d))
+            y_coordinates.append(a * (1 + e * math.cos(2 * math.pi * b * t)) * math.cos(2 * math.pi * c * t + d))
         self.draw_model(x_coordinates, y_coordinates, None)
 
     def model_func_10(self):
@@ -523,7 +556,7 @@ class MainWindow(QtWidgets.QMainWindow):
             t = i / gercs
             x_value = x_value + t
             x_coordinates.append(t)
-            y_coordinates.append(a+(b-a)*random.random())
+            y_coordinates.append(a + (b - a) * random.random())
         self.draw_model(x_coordinates, y_coordinates, None)
 
     def model_func_11(self):
@@ -533,14 +566,16 @@ class MainWindow(QtWidgets.QMainWindow):
         gercs, n = self.read_gerc_and_n()
         alpha = float(self.model.form.itemAt(0, 1).widget().text())
         sigma = float(self.model.form.itemAt(1, 1).widget().text())
+        sigma = math.sqrt(sigma)
         for i in range(n):
             eta = 0
             t = i / gercs
             x_value = x_value + t
             x_coordinates.append(t)
-            for j in range(1, 12):
-                eta += random.random() - 6
-            y_coordinates.append(alpha + sigma * eta)
+            for j in range(12):
+                eta += random.random()
+            eta -= 6
+            y_coordinates.append(alpha + (sigma * eta))
         self.draw_model(x_coordinates, y_coordinates, None)
 
     def model_func_12(self):
@@ -552,6 +587,7 @@ class MainWindow(QtWidgets.QMainWindow):
         eta = []
         gercs, n = self.read_gerc_and_n()
         sigma = float(self.model.form.itemAt(0, 1).widget().text())
+        sigma = math.sqrt(sigma)
         p = int(self.model.form.itemAt(1, 1).widget().text())
         q = int(self.model.form.itemAt(2, 1).widget().text())
         a = str(self.model.form.itemAt(3, 1).widget().text()).split(",")
@@ -563,16 +599,17 @@ class MainWindow(QtWidgets.QMainWindow):
             t = i / gercs
             x_value = x_value + t
             x_coordinates.append(t)
-            for j in range(1, 12):
-                eta_temp += random.random() - 6
-            eta.append(eta_temp*sigma)
+            for j in range(12):
+                eta_temp += random.random()
+            eta_temp -= 6
+            eta.append(eta_temp * sigma)
             for j in range(1, p):
-                if i-j >= 0 and i != 0:
-                    p_sum += float(a[j])*eta[i-j]
+                if i - j >= 0 and i != 0:
+                    p_sum += float(a[j]) * eta[i - j]
             for j in range(1, q):
-                if i-j >= 0 and i != 0:
-                    q_sum += float(b[j])*y_coordinates[i-j]
-            y_coordinates.append(eta[i]+p_sum+q_sum)
+                if i - j >= 0 and i != 0:
+                    q_sum += float(b[j]) * y_coordinates[i - j]
+            y_coordinates.append(eta[i] + p_sum + q_sum)
         self.draw_model(x_coordinates, y_coordinates, None)
 
     def read_gerc_and_n(self):
@@ -592,6 +629,9 @@ class MainWindow(QtWidgets.QMainWindow):
         self.variables_with_value["k1"] += 1
         self.variables_with_value['Channels1'].append(self.model_name)
         plot = self.Channels.addPlot(x=x, y=y, title=self.model_name)
+        view = plot.getViewBox()
+        view.setMouseMode(pg.ViewBox.RectMode)
+        view.setMouseEnabled(x=True, y=False)
         plot.setDownsampling(auto=True)
         plot.showAxis("right")
         plot.showAxis("bottom")
@@ -644,7 +684,7 @@ class MainWindow(QtWidgets.QMainWindow):
         superpos_type = self.model.form.itemAt(0, 1).widget().currentIndex()
         a = str(self.model.form.itemAt(1, 1).widget().text()).split(",")
         for i in range(self.variables_with_value["k1"]):
-            checkboxes.append(self.model.form.itemAt(i+2, 1).widget().isChecked())
+            checkboxes.append(self.model.form.itemAt(i + 2, 1).widget().isChecked())
         for i in range(n):
             y_value = float(a[0])
             x_value = x_value + i / gercs
@@ -653,7 +693,8 @@ class MainWindow(QtWidgets.QMainWindow):
                 counter = 1
                 for j in range(self.variables_with_value["k1"]):
                     if checkboxes[j]:
-                        y_value += float(a[counter]) * self.plots_dict[self.variables_with_value["Channels1"][j]].yData[i]
+                        y_value += float(a[counter]) * self.plots_dict[self.variables_with_value["Channels1"][j]].yData[
+                            i]
                         counter += 1
             else:
                 for j in range(self.variables_with_value["k1"]):
@@ -661,6 +702,90 @@ class MainWindow(QtWidgets.QMainWindow):
                         y_value *= self.plots_dict[self.variables_with_value["Channels1"][j]].yData[i]
             y_coordinates.append(y_value)
         self.draw_model(x_coordinates, y_coordinates, None)
+
+    def stat_func(self):
+        avg = 0
+        disp = 0
+        asym = 0
+        exc = 0
+        for i in reversed(range(self.stat.form.count())):
+            self.stat.form.removeRow(i)
+
+        self.stat.text_hint.setText(self.model.form.itemAt(0, 1).widget().currentText())
+        n = self.model.form.itemAt(0, 1).widget().currentIndex()
+        k = int(self.model.form.itemAt(1, 1).widget().text())
+        for i in range(self.variables_with_value["n"]):
+            avg += self.plots_dict[self.variables_with_value["Channels1"][n]].yData[i]
+        avg = avg / self.variables_with_value["n"]
+        avg = float('{:.2f}'.format(avg))
+        self.stat.form.addRow(QLabel("Среднее:"), QLabel(str(avg)))
+
+        for i in range(self.variables_with_value["n"]):
+            disp += pow(self.plots_dict[self.variables_with_value["Channels1"][n]].yData[i] - avg, 2)
+        disp = disp / self.variables_with_value["n"]
+        disp = float('{:.2f}'.format(disp))
+        self.stat.form.addRow(QLabel("Дисперсия:"), QLabel(str(disp)))
+
+        srko = math.sqrt(disp)
+        srko = float('{:.2f}'.format(srko))
+        self.stat.form.addRow(QLabel("Среднеквадратичное отклонение:"), QLabel(str(srko)))
+
+        var = srko / avg
+        var = float('{:.2f}'.format(var))
+        self.stat.form.addRow(QLabel("Коэф. вариации:"), QLabel(str(var)))
+
+        for i in range(self.variables_with_value["n"]):
+            asym += pow(self.plots_dict[self.variables_with_value["Channels1"][n]].yData[i] - avg, 3)
+        asym = asym / self.variables_with_value["n"] / pow(srko, 3)
+        asym = float('{:.2f}'.format(asym))
+        self.stat.form.addRow(QLabel("Коэф. ассиметрии:"), QLabel(str(asym)))
+
+        for i in range(self.variables_with_value["n"]):
+            exc += pow(self.plots_dict[self.variables_with_value["Channels1"][n]].yData[i] - avg, 4)
+        exc = exc / self.variables_with_value["n"] / pow(srko, 4)
+        exc = exc - 3
+        exc = float('{:.2f}'.format(exc))
+        self.stat.form.addRow(QLabel("Коэф. эксцесса:"), QLabel(str(exc)))
+
+        minim = min(self.plots_dict[self.variables_with_value["Channels1"][n]].yData)
+        minim = float('{:.2f}'.format(minim))
+        self.stat.form.addRow(QLabel("минимальное знач. сигнала:"), QLabel(str(minim)))
+
+        maxim = max(self.plots_dict[self.variables_with_value["Channels1"][n]].yData)
+        maxim = float('{:.2f}'.format(maxim))
+        self.stat.form.addRow(QLabel("максим. знач. сигнала:"), QLabel(str(maxim)))
+
+        data = self.plots_dict[self.variables_with_value["Channels1"][n]].yData
+        data.sort()
+        kwan_n = int(0.05 * self.variables_with_value["n"])
+        kwan1 = data[kwan_n]
+        self.stat.form.addRow(QLabel("Квантиль 0.05:"), QLabel(str(kwan1)))
+
+        kwan_n = int(0.95 * self.variables_with_value["n"])
+        kwan2 = data[kwan_n]
+        self.stat.form.addRow(QLabel("Квантиль 0.95:"), QLabel(str(kwan2)))
+
+        kwan_n = int(0.5 * self.variables_with_value["n"])
+        med = data[kwan_n]
+        self.stat.form.addRow(QLabel("Медиана:"), QLabel(str(med)))
+
+        dots = []
+        hysto = [0 for x in range(k)]
+        temp_dot = minim
+        h = (maxim - minim)/k
+        for i in range(k+1):
+            dots.append(temp_dot + h*i)
+        for i in range(self.variables_with_value["n"]):
+            for j in range(1, k):
+                if dots[j] >= data[i] >= data[j - 1]:
+                    hysto[j] += 1
+                    break
+        bg = pg.BarGraphItem(x=range(k), height=hysto, width=1)
+        self.stat.hystogram.clear()
+        self.stat.hystogram.addItem(bg)
+        self.stat.hystogram.setMouseEnabled(x=False, y=False)
+        self.stat.show()
+
 
 def main():
     app = QtWidgets.QApplication(sys.argv)
