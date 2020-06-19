@@ -1,12 +1,14 @@
 import math
 import os
 
+import numpy
 from PyQt5 import QtWidgets, uic, QtGui, QtCore
 import pyqtgraph as pg
 from functools import partial
 import datetime
 import sys
 import random
+from decimal import Decimal
 
 from PyQt5.QtGui import QFont
 from PyQt5.QtCore import Qt
@@ -15,89 +17,14 @@ from PyQt5.QtWidgets import QSlider, QLabel, QLineEdit, QDialogButtonBox, QCheck
 MAXVAL = 650000
 
 
-class RangeSliderClass(QtWidgets.QWidget):
+class SpecWindow(QtWidgets.QDialog):
 
-    def __init__(self):
-        super().__init__()
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
 
-        self.minTime = 0
-        self.maxTime = 0
-        self.minRangeTime = 0
-        self.maxRangeTime = 0
-
-        self.sliderMin = MAXVAL
-        self.sliderMax = MAXVAL
-
-        self.setupUi(self)
-
-    def setupUi(self, RangeSlider):
-        RangeSlider.setObjectName("RangeSlider")
-        RangeSlider.resize(1000, 65)
-        RangeSlider.setMaximumSize(QtCore.QSize(16777215, 65))
-        self.RangeBarVLayout = QtWidgets.QVBoxLayout(RangeSlider)
-        self.RangeBarVLayout.setContentsMargins(5, 0, 5, 0)
-        self.RangeBarVLayout.setSpacing(0)
-        self.RangeBarVLayout.setObjectName("RangeBarVLayout")
-
-        self.slidersFrame = QtWidgets.QFrame(RangeSlider)
-        self.slidersFrame.setMaximumSize(QtCore.QSize(16777215, 25))
-        self.slidersFrame.setFrameShape(QtWidgets.QFrame.StyledPanel)
-        self.slidersFrame.setFrameShadow(QtWidgets.QFrame.Raised)
-        self.slidersFrame.setObjectName("slidersFrame")
-        self.horizontalLayout = QtWidgets.QHBoxLayout(self.slidersFrame)
-        self.horizontalLayout.setSizeConstraint(QtWidgets.QLayout.SetMinimumSize)
-        self.horizontalLayout.setContentsMargins(5, 2, 5, 2)
-        self.horizontalLayout.setSpacing(0)
-        self.horizontalLayout.setObjectName("horizontalLayout")
-
-        ## Start Slider Widget
-        self.startSlider = QtWidgets.QSlider(self.slidersFrame)
-        self.startSlider.setMaximum(self.sliderMin)
-        self.startSlider.setMinimumSize(QtCore.QSize(100, 5))
-        self.startSlider.setMaximumSize(QtCore.QSize(16777215, 10))
-
-        font = QtGui.QFont()
-        font.setKerning(True)
-
-        self.startSlider.setFont(font)
-        self.startSlider.setAcceptDrops(False)
-        self.startSlider.setAutoFillBackground(False)
-        self.startSlider.setOrientation(QtCore.Qt.Horizontal)
-        self.startSlider.setInvertedAppearance(True)
-        self.startSlider.setObjectName("startSlider")
-        self.startSlider.setValue(MAXVAL)
-        self.startSlider.valueChanged.connect(self.handleStartSliderValueChange)
-        self.horizontalLayout.addWidget(self.startSlider)
-
-        ## End Slider Widget
-        self.endSlider = QtWidgets.QSlider(self.slidersFrame)
-        self.endSlider.setMaximum(MAXVAL)
-        self.endSlider.setMinimumSize(QtCore.QSize(100, 5))
-        self.endSlider.setMaximumSize(QtCore.QSize(16777215, 10))
-        self.endSlider.setTracking(True)
-        self.endSlider.setOrientation(QtCore.Qt.Horizontal)
-        self.endSlider.setObjectName("endSlider")
-        self.endSlider.setValue(self.sliderMax)
-        self.endSlider.valueChanged.connect(self.handleEndSliderValueChange)
-
-        # self.endSlider.sliderReleased.connect(self.handleEndSliderValueChange)
-
-        self.horizontalLayout.addWidget(self.endSlider)
-
-        self.RangeBarVLayout.addWidget(self.slidersFrame)
-
-        # self.retranslateUi(RangeSlider)
-        QtCore.QMetaObject.connectSlotsByName(RangeSlider)
-
-        self.show()
-
-    @QtCore.pyqtSlot(int)
-    def handleStartSliderValueChange(self, value):
-        self.startSlider.setValue(value)
-
-    @QtCore.pyqtSlot(int)
-    def handleEndSliderValueChange(self, value):
-        self.endSlider.setValue(value)
+        # Load the UI Page
+        # pg.setConfigOption('background', 'w')
+        uic.loadUi('design/design_spec.ui', self)
 
 
 class InfoWindow(QtWidgets.QMainWindow):
@@ -107,7 +34,7 @@ class InfoWindow(QtWidgets.QMainWindow):
 
         # Load the UI Page
         # pg.setConfigOption('background', 'w')
-        uic.loadUi('design_window2.ui', self)
+        uic.loadUi('design/design_info.ui', self)
 
 
 class ModelWindow(QtWidgets.QDialog):
@@ -117,7 +44,7 @@ class ModelWindow(QtWidgets.QDialog):
 
         # Load the UI Page
         # pg.setConfigOption('background', 'w')
-        uic.loadUi('design_model_window.ui', self)
+        uic.loadUi('design/design_model_window.ui', self)
 
 
 class StatWindow(QtWidgets.QDialog):
@@ -127,7 +54,7 @@ class StatWindow(QtWidgets.QDialog):
 
         # Load the UI Page
         # pg.setConfigOption('background', 'w')
-        uic.loadUi('design_stat.ui', self)
+        uic.loadUi('design/design_stat.ui', self)
         self.hystogram.setBackground(background=None)
         self.hystogram.showAxis("left", show=False)
         self.hystogram.showAxis("bottom", show=False)
@@ -140,16 +67,20 @@ class MainWindow(QtWidgets.QMainWindow):
     variables_with_value["Channels1"] = []
     variables_with_value['k1'] = 0
     variables_with_value['date1'] = ""
+    spec_dict_a = []
+    spec_dict_p = []
+    spec_plot = []
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
         # Load the UI Page
         # pg.setConfigOption('background', 'w')
-        uic.loadUi('design.ui', self)
+        uic.loadUi('design/design.ui', self)
         self.dialog = InfoWindow(self)
         self.model = ModelWindow(self)
         self.stat = StatWindow(self)
+        self.spec = SpecWindow(self)
         self.Channels.setBackground(background=None)
         self.MainGraph.setBackground(background=None)
         self.FileOpen.triggered.connect(self.browse_folder)
@@ -158,6 +89,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.widget_cond = True
         self.opened_check = True
         self.model_name = ""
+        self.spec.grid.itemAt(2).widget().clicked.connect(partial(self.do_it_func))
         self.model_1.triggered.connect(partial(self.model_button_clicked, 1))
         self.model_2.triggered.connect(partial(self.model_button_clicked, 2))
         self.model_3.triggered.connect(partial(self.model_button_clicked, 3))
@@ -172,6 +104,8 @@ class MainWindow(QtWidgets.QMainWindow):
         self.model_12.triggered.connect(partial(self.model_button_clicked, 12))
         self.superpos.triggered.connect(partial(self.model_button_clicked, 13))
         self.stats.triggered.connect(partial(self.model_button_clicked, 14))
+        self.spectr.triggered.connect(partial(self.spec_func))
+        self.spec.type.currentIndexChanged.connect(partial(self.change_type_func))
         self.model_func_dictionary = {"1": self.model_func_1, "2": self.model_func_2, "3": self.model_func_3,
                                       "4": self.model_func_4, "5": self.model_func_5, "6": self.model_func_6,
                                       "7": self.model_func_7, "8": self.model_func_8, "9": self.model_func_9,
@@ -272,7 +206,7 @@ class MainWindow(QtWidgets.QMainWindow):
             self.plots_dict[data['Channels'][i]].setDownsampling(auto=True)
             self.plots_dict[data['Channels'][i]].showAxis('right')
             self.plots_dict[data['Channels'][i]].showAxis('top')
-            #self.plots_dict[data["Channels"][i]].setMouseEnabled(x=False, y=False)
+            # self.plots_dict[data["Channels"][i]].setMouseEnabled(x=False, y=False)
             self.plots_dict[data['Channels'][i]].getAxis('top').setStyle(showValues=False)
             self.plots_dict[data['Channels'][i]].getAxis('left').setStyle(showValues=False)
             self.plots_dict[data['Channels'][i]].getAxis('right').setStyle(showValues=False)
@@ -280,7 +214,7 @@ class MainWindow(QtWidgets.QMainWindow):
 
             self.Channels.nextRow()
             self.plots_dict[data['Channels'][i]].autoBtn.clicked.connect(
-                partial(self.testFunc, x_coordinates, data['channel_' + str(i)], data['Channels'][i], ticks))
+                partial(self.unwrap_graph, x_coordinates, data['channel_' + str(i)], data['Channels'][i], ticks))
             self.plots_dict[data['Channels'][i]] = self.plots_dict[data['Channels'][i]].plot(clear=True,
                                                                                              x=x_coordinates,
                                                                                              y=data[
@@ -289,20 +223,11 @@ class MainWindow(QtWidgets.QMainWindow):
             self.plots_dict[data['Channels'][i]].setPen(width=3)
         return 123
 
-    def testFunc(self, x, y, name, ticks):
+    def unwrap_graph(self, x, y, name, ticks):
         Plot = self.MainGraph.addPlot(clear=True, x=x, y=y, name=name, title=name)
         view = Plot.getViewBox()
-        view.setMouseMode(pg.ViewBox.RectMode)
+        # view.setMouseMode(pg.ViewBox.RectMode)
         view.setMouseEnabled(x=True, y=False)
-        self.MainGraph.nextRow()
-        slider = RangeSliderClass()
-        slider.minTime = x[0]
-        slider.maxTime = x[len(x) - 1]
-        # slider.handleStartSliderValueChange(self, )
-        slider.startSlider.valueChanged.connect(partial(self.startSliderFunc, slider.startSlider.value()))
-        proxy = QtGui.QGraphicsProxyWidget()
-        proxy.setWidget(slider)
-        self.MainGraph.addItem(proxy)
         self.MainGraph.nextRow()
         Plot.plot(clear=True, x=x, y=y, name=name).setPen(width=3)
         if not (ticks is None):
@@ -629,9 +554,6 @@ class MainWindow(QtWidgets.QMainWindow):
         self.variables_with_value["k1"] += 1
         self.variables_with_value['Channels1'].append(self.model_name)
         plot = self.Channels.addPlot(x=x, y=y, title=self.model_name)
-        view = plot.getViewBox()
-        view.setMouseMode(pg.ViewBox.RectMode)
-        view.setMouseEnabled(x=True, y=False)
         plot.setDownsampling(auto=True)
         plot.showAxis("right")
         plot.showAxis("bottom")
@@ -642,7 +564,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.plots_dict[self.model_name] = plot.plot(clear=True, x=x, y=y, title=self.model_name)
         self.Channels.nextRow()
         plot.autoBtn.clicked.connect(
-            partial(self.testFunc, x, y, self.model_name, ticks))
+            partial(self.unwrap_graph, x, y, self.model_name, ticks))
 
     def save_func(self):
         name = QtGui.QFileDialog.getSaveFileName(self, 'Save File')
@@ -717,7 +639,7 @@ class MainWindow(QtWidgets.QMainWindow):
         for i in range(self.variables_with_value["n"]):
             avg += self.plots_dict[self.variables_with_value["Channels1"][n]].yData[i]
         avg = avg / self.variables_with_value["n"]
-        avg = float('{:.2f}'.format(avg))
+        # avg = float('{:.2f}'.format(avg))
         self.stat.form.addRow(QLabel("Среднее:"), QLabel(str(avg)))
 
         for i in range(self.variables_with_value["n"]):
@@ -745,6 +667,7 @@ class MainWindow(QtWidgets.QMainWindow):
         exc = exc / self.variables_with_value["n"] / pow(srko, 4)
         exc = exc - 3
         exc = float('{:.2f}'.format(exc))
+        testtest = str(exc)
         self.stat.form.addRow(QLabel("Коэф. эксцесса:"), QLabel(str(exc)))
 
         minim = min(self.plots_dict[self.variables_with_value["Channels1"][n]].yData)
@@ -772,19 +695,86 @@ class MainWindow(QtWidgets.QMainWindow):
         dots = []
         hysto = [0 for x in range(k)]
         temp_dot = minim
-        h = (maxim - minim)/k
-        for i in range(k+1):
-            dots.append(temp_dot + h*i)
+        h = (maxim - minim) / k
+        for i in range(k + 1):
+            dots.append(temp_dot + h * i)
         for i in range(self.variables_with_value["n"]):
-            for j in range(1, k):
-                if dots[j] >= data[i] >= data[j - 1]:
-                    hysto[j] += 1
+            for j in range(1, k + 1):
+                if dots[j] >= data[i] >= dots[j - 1]:
+                    hysto[j - 1] += 1
                     break
         bg = pg.BarGraphItem(x=range(k), height=hysto, width=1)
         self.stat.hystogram.clear()
         self.stat.hystogram.addItem(bg)
         self.stat.hystogram.setMouseEnabled(x=False, y=False)
         self.stat.show()
+
+    def spec_func(self):
+        self.spec.grid.itemAt(0).widget().addItems(self.variables_with_value["Channels1"])
+        self.spec.show()
+
+    def do_it_func(self):
+        x_coordinates = []
+        x_value = 0
+        tip = self.spec.type.currentIndex()
+        ch = self.spec.grid.itemAt(0).widget().currentIndex()
+        h0 = self.spec.grid.itemAt(1).widget().currentIndex()
+        l = self.spec.grid.itemAt(3).widget().text()
+        coord = self.plots_dict[self.variables_with_value["Channels1"][ch]].yData
+        y_coordinates_a = numpy.fft.rfft(coord)
+        y_coordinates_p = numpy.fft.rfft(coord)
+        if h0 == 1:
+            y_coordinates_a[0] = 0
+            y_coordinates_p[0] = 0
+        elif h0 == 2:
+            y_coordinates_a[0] = abs(y_coordinates_a[1])
+            y_coordinates_p[0] = abs(y_coordinates_p[1])
+        for i in range(len(y_coordinates_a)):
+            t = i / (self.variables_with_value["gerc"] * self.variables_with_value["n"])
+            x_value = x_value + t
+            x_coordinates.append(t)
+            y_coordinates_a[i] = t * abs(y_coordinates_a[i])
+            y_coordinates_p[i] = pow(t, 2) * pow(abs(y_coordinates_p[i]), 2)
+        y_coordinates_a = y_coordinates_a.real
+        y_coordinates_p = y_coordinates_p.real
+        if l != "" and l != 0:
+            l = int(l)
+            mlt = 1 / ((2 * l) + 1)
+            for j in range(len(y_coordinates_a)):
+                summ_a = 0
+                summ_p = 0
+                for i in range(-l, l):
+                    if j + i < len(y_coordinates_a):
+                        summ_a += y_coordinates_a[abs(j + i)]
+                        summ_p += y_coordinates_p[abs(j + i)]
+                y_coordinates_a[j] = summ_a * mlt
+                y_coordinates_p[j] = summ_p * mlt
+
+        plot = self.spec.specGraph.addPlot()
+        plot_a = plot.plot(x=x_coordinates, y=y_coordinates_a,
+                             title=self.variables_with_value["Channels1"][ch] + "_a")
+        plot_p = plot.plot(x=x_coordinates, y=y_coordinates_p,
+                             title=self.variables_with_value["Channels1"][ch] + "_p", pen={'color': "FF0"})
+        self.spec_plot.append(plot)
+        self.spec_dict_a.append(plot_a)
+        self.spec_dict_p.append(plot_p)
+        if tip == 0:
+            plot_p.hide()
+        else:
+            plot_a.hide()
+        self.spec.specGraph.nextRow()
+
+    def change_type_func(self):
+        tip = self.spec.type.currentIndex()
+        if len(self.spec_dict_a) != 0:
+            for i in range(len(self.spec_dict_a)):
+                if tip == 0:
+                    self.spec_dict_a[i].show()
+                    self.spec_dict_p[i].hide()
+                else:
+                    self.spec_dict_a[i].hide()
+                    self.spec_dict_p[i].show()
+                self.spec_plot[i].autoRange()
 
 
 def main():
