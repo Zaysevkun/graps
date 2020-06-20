@@ -70,6 +70,7 @@ class MainWindow(QtWidgets.QMainWindow):
     spec_dict_a = []
     spec_dict_p = []
     spec_plot = []
+    spec_plot_lg = []
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -106,6 +107,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.stats.triggered.connect(partial(self.model_button_clicked, 14))
         self.spectr.triggered.connect(partial(self.spec_func))
         self.spec.type.currentIndexChanged.connect(partial(self.change_type_func))
+        self.spec.mode.currentIndexChanged.connect(partial(self.change_mode_func))
         self.model_func_dictionary = {"1": self.model_func_1, "2": self.model_func_2, "3": self.model_func_3,
                                       "4": self.model_func_4, "5": self.model_func_5, "6": self.model_func_6,
                                       "7": self.model_func_7, "8": self.model_func_8, "9": self.model_func_9,
@@ -717,7 +719,9 @@ class MainWindow(QtWidgets.QMainWindow):
         x_coordinates = []
         x_value = 0
         tip = self.spec.type.currentIndex()
+        md = self.spec.mode.currentIndex()
         ch = self.spec.grid.itemAt(0).widget().currentIndex()
+        ch_name = self.spec.grid.itemAt(0).widget().currentText()
         h0 = self.spec.grid.itemAt(1).widget().currentIndex()
         l = self.spec.grid.itemAt(3).widget().text()
         coord = self.plots_dict[self.variables_with_value["Channels1"][ch]].yData
@@ -750,23 +754,41 @@ class MainWindow(QtWidgets.QMainWindow):
                 y_coordinates_a[j] = summ_a * mlt
                 y_coordinates_p[j] = summ_p * mlt
 
+        y_coordinates_a_lg = []
+        for i in range(len(y_coordinates_a)):
+            if y_coordinates_a[i] > 0:
+                y_coordinates_a_lg.append(math.log10(y_coordinates_a[i]) * 20)
+            else:
+                y_coordinates_a_lg.append(y_coordinates_a[i])
+
         plot = self.spec.specGraph.addPlot()
+        plot.setLabels(left=ch_name, bottom="Частота(гц)")
         plot_a = plot.plot(x=x_coordinates, y=y_coordinates_a,
-                             title=self.variables_with_value["Channels1"][ch] + "_a")
+                           title=self.variables_with_value["Channels1"][ch] + "_a")
         plot_p = plot.plot(x=x_coordinates, y=y_coordinates_p,
-                             title=self.variables_with_value["Channels1"][ch] + "_p", pen={'color': "FF0"})
+                           title=self.variables_with_value["Channels1"][ch] + "_p", pen={'color': "FF0"})
+        plot_lg = plot.plot(x=x_coordinates, y=y_coordinates_a_lg,
+                            title=self.variables_with_value["Channels1"][ch] + "_lg", pen={'color': "F0F"})
         self.spec_plot.append(plot)
         self.spec_dict_a.append(plot_a)
         self.spec_dict_p.append(plot_p)
-        if tip == 0:
-            plot_p.hide()
+        self.spec_plot_lg.append(plot_lg)
+        if md == 0:
+            if tip == 0:
+                plot_p.hide()
+                plot_lg.hide()
+            else:
+                plot_a.hide()
+                plot_lg.hide()
         else:
+            plot_p.hide()
             plot_a.hide()
         self.spec.specGraph.nextRow()
 
     def change_type_func(self):
         tip = self.spec.type.currentIndex()
-        if len(self.spec_dict_a) != 0:
+        md = self.spec.mode.currentIndex()
+        if len(self.spec_dict_a) != 0 and md == 0:
             for i in range(len(self.spec_dict_a)):
                 if tip == 0:
                     self.spec_dict_a[i].show()
@@ -775,6 +797,24 @@ class MainWindow(QtWidgets.QMainWindow):
                     self.spec_dict_a[i].hide()
                     self.spec_dict_p[i].show()
                 self.spec_plot[i].autoRange()
+
+    def change_mode_func(self):
+        md = self.spec.mode.currentIndex()
+        if len(self.spec_dict_a) != 0:
+            if md == 0:
+                self.change_type_func()
+                for i in range(len(self.spec_dict_a)):
+                    self.spec_plot_lg[i].hide()
+            else:
+                self.hide_all_exep_lg()
+                for i in range(len(self.spec_dict_a)):
+                    self.spec_plot_lg[i].show()
+                    self.spec_plot[i].autoRange()
+
+    def hide_all_exep_lg(self):
+        for i in range(len(self.spec_dict_a)):
+            self.spec_dict_a[i].hide()
+            self.spec_dict_p[i].hide()
 
 
 def main():

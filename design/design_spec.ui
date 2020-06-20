@@ -70,6 +70,20 @@
       </widget>
      </item>
      <item>
+      <widget class="QComboBox" name="mode">
+       <item>
+        <property name="text">
+         <string>Стандартный режим</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>Логарифмический режим</string>
+        </property>
+       </item>
+      </widget>
+     </item>
+     <item>
       <widget class="QDialogButtonBox" name="buttonBox">
        <property name="orientation">
         <enum>Qt::Horizontal</enum>
