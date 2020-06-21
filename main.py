@@ -17,6 +17,16 @@ from PyQt5.QtWidgets import QSlider, QLabel, QLineEdit, QDialogButtonBox, QCheck
 MAXVAL = 650000
 
 
+class SpectroWindow(QtWidgets.QDialog):
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        # Load the UI Page
+        # pg.setConfigOption('background', 'w')
+        uic.loadUi('design/design_spectrogramm.ui', self)
+
+
 class SpecWindow(QtWidgets.QDialog):
 
     def __init__(self, *args, **kwargs):
@@ -82,6 +92,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.model = ModelWindow(self)
         self.stat = StatWindow(self)
         self.spec = SpecWindow(self)
+        self.spectro = SpectroWindow(self)
         self.Channels.setBackground(background=None)
         self.MainGraph.setBackground(background=None)
         self.FileOpen.triggered.connect(self.browse_folder)
@@ -105,6 +116,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.model_12.triggered.connect(partial(self.model_button_clicked, 12))
         self.superpos.triggered.connect(partial(self.model_button_clicked, 13))
         self.stats.triggered.connect(partial(self.model_button_clicked, 14))
+        self.spectrogramm.triggered.connect(partial(self.model_button_clicked, 15))
         self.spectr.triggered.connect(partial(self.spec_func))
         self.spec.type.currentIndexChanged.connect(partial(self.change_type_func))
         self.spec.mode.currentIndexChanged.connect(partial(self.change_mode_func))
@@ -112,7 +124,7 @@ class MainWindow(QtWidgets.QMainWindow):
                                       "4": self.model_func_4, "5": self.model_func_5, "6": self.model_func_6,
                                       "7": self.model_func_7, "8": self.model_func_8, "9": self.model_func_9,
                                       "10": self.model_func_10, "11": self.model_func_11, "12": self.model_func_12,
-                                      "13": self.superpos_func, "14": self.stat_func}
+                                      "13": self.superpos_func, "14": self.stat_func, "15": self.spectrogramm_func}
         self.model.buttons.button(QDialogButtonBox.Ok).clicked.connect(partial(self.model_func))
         self.fileSave.triggered.connect(partial(self.save_func))
 
@@ -334,6 +346,13 @@ class MainWindow(QtWidgets.QMainWindow):
             self.model.form.addRow(QLabel("Сигнал:"), combo)
             combo.addItems(self.variables_with_value["Channels1"])
             self.model.form.addRow(QLabel("K:"), QLineEdit())
+        if model_num == 15:
+            combo = QComboBox()
+            self.model.form.addRow(QLabel("Сигнал:"), combo)
+            combo.addItems(self.variables_with_value["Channels1"])
+            self.model.form.addRow(QLabel("Коэффициент нахлеста:"), QLineEdit())
+            self.model.form.addRow(QLabel("Ширина:"), QLineEdit())
+            self.model.form.addRow(QLabel("Высота:"), QLineEdit())
         self.model.show()
 
     def model_func(self):
@@ -815,6 +834,82 @@ class MainWindow(QtWidgets.QMainWindow):
         for i in range(len(self.spec_dict_a)):
             self.spec_dict_a[i].hide()
             self.spec_dict_p[i].hide()
+
+    def spectrogramm_func(self):
+        pg.setConfigOptions(imageAxisOrder='row-major')
+        gercs, n = self.read_gerc_and_n()
+        ch = self.model.form.itemAt(0, 1).widget().currentIndex()
+        data = self.plots_dict[self.variables_with_value["Channels1"][ch]].yData
+        nah = float(self.model.form.itemAt(1, 1).widget().text())
+        n_s = int(self.model.form.itemAt(2, 1).widget().text())
+        k = int(self.model.form.itemAt(3, 1).widget().text())
+        section_base = n / n_s
+        section_n = int(section_base * nah)
+        nnn = 2*k
+        if section_n > nnn:
+            while nnn < section_n:
+                nnn += nnn
+        nn = nnn
+        l = nn / (2*k)
+        matrix = []
+        for i in range(n_s):
+            x = []
+            n0 = i*int(section_base)
+            for j in range(n0, section_n + n0):
+                x.append(data[j])
+            s = 0
+            for j in range(section_n):
+                s += x[j]
+            s = s * (1/section_n)
+            for j in range(section_n):
+                x[j] -= s
+                w = 0.54 - 0.46 * math.cos((2 * math.pi * j)/(section_n - 1))
+                x[j] *= w
+            for j in range(nn - section_n):
+                x.append(0)
+
+            a = numpy.fft.rfft(x)
+            for j in range(len(a)):
+                t = j / (gercs * n)
+                a[j] = abs(a[j]) * t
+            a = a.real
+            if int(l) > 1:
+                mlt = 1 / l
+                l1 = -(l - 1)/2
+                l2 = l/2
+                for j in range(len(a)):
+                    summ = 0
+                    for h in range(int(l1), int(l2)):
+                        if j + h < len(a):
+                            summ += a[abs(j + h)]
+                    a[j] = summ * mlt
+            matrix.append([])
+            for j in range(len(a)):
+                matrix[i].append(a[j])
+        mat = numpy.array(matrix)
+        p1 = self.spectro.hysto.addPlot()
+        img = pg.ImageItem()
+        p1.addItem(img)
+        hist = pg.HistogramLUTItem()
+        hist.setImageItem(img)
+        self.spectro.hysto.addItem(hist)
+        hist.setLevels(numpy.min(mat), numpy.max(mat))
+
+        #hist.gradient.restoreState(
+        #    {'mode': 'rgb',
+        #     'ticks': [(0.5, (0, 182, 188, 255)),
+        #               (1.0, (246, 111, 0, 255)),
+        #               (0.0, (75, 0, 113, 255))]})
+        img.setImage(mat)
+        #p1.setAspectLocked(False)
+        #p1.setRange(xRange=[0, 100], yRange=[0, 100], padding=0)
+        # Scale the X and Y Axis to time and frequency (standard is pixels)
+        img.scale(k / numpy.size(mat, axis=1),
+                  n_s / numpy.size(mat, axis=0))
+        p1.setLimits(xMin=0, xMax=k, yMin=0, yMax=n_s)
+        p1.setLabel('left', "Time", units='s')
+        p1.setLabel('bottom', "Frequency", units='Hz')
+        self.spectro.show()
 
 
 def main():

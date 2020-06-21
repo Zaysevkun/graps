@@ -151,6 +151,7 @@
     <addaction name="menu_6"/>
     <addaction name="stats"/>
     <addaction name="spectr"/>
+    <addaction name="spectrogramm"/>
    </widget>
    <widget class="QMenu" name="menu_3">
     <property name="title">
@@ -272,6 +273,11 @@
   <action name="spectr">
    <property name="text">
     <string>Спектральный анализ</string>
+   </property>
+  </action>
+  <action name="spectrogramm">
+   <property name="text">
+    <string>Спектрограмма</string>
    </property>
   </action>
  </widget>
