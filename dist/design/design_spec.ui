@@ -1,0 +1,145 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>Dialog</class>
+ <widget class="QDialog" name="Dialog">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>600</width>
+    <height>500</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>Dialog</string>
+  </property>
+  <layout class="QVBoxLayout" name="verticalLayout">
+   <item>
+    <layout class="QGridLayout" name="grid">
+     <item row="0" column="0">
+      <widget class="QComboBox" name="channel_select"/>
+     </item>
+     <item row="0" column="1">
+      <widget class="QComboBox" name="handling_0">
+       <item>
+        <property name="text">
+         <string>ничего</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>обнулить</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>уравнять</string>
+        </property>
+       </item>
+      </widget>
+     </item>
+     <item row="1" column="1">
+      <widget class="QPushButton" name="button_build">
+       <property name="text">
+        <string>Построить</string>
+       </property>
+      </widget>
+     </item>
+     <item row="1" column="0">
+      <widget class="QLineEdit" name="smooth"/>
+     </item>
+    </layout>
+   </item>
+   <item>
+    <widget class="GraphicsLayoutWidget" name="specGraph"/>
+   </item>
+   <item>
+    <layout class="QHBoxLayout" name="footer">
+     <item>
+      <widget class="QComboBox" name="type">
+       <item>
+        <property name="text">
+         <string>амплитудный спектр</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>оценка СПМ</string>
+        </property>
+       </item>
+      </widget>
+     </item>
+     <item>
+      <widget class="QComboBox" name="mode">
+       <item>
+        <property name="text">
+         <string>Стандартный режим</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>Логарифмический режим</string>
+        </property>
+       </item>
+      </widget>
+     </item>
+     <item>
+      <widget class="QDialogButtonBox" name="buttonBox">
+       <property name="orientation">
+        <enum>Qt::Horizontal</enum>
+       </property>
+       <property name="standardButtons">
+        <set>QDialogButtonBox::Close</set>
+       </property>
+       <property name="centerButtons">
+        <bool>false</bool>
+       </property>
+      </widget>
+     </item>
+    </layout>
+   </item>
+  </layout>
+ </widget>
+ <customwidgets>
+  <customwidget>
+   <class>GraphicsLayoutWidget</class>
+   <extends>QGraphicsView</extends>
+   <header>pyqtgraph</header>
+  </customwidget>
+ </customwidgets>
+ <resources/>
+ <connections>
+  <connection>
+   <sender>buttonBox</sender>
+   <signal>accepted()</signal>
+   <receiver>Dialog</receiver>
+   <slot>accept()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>248</x>
+     <y>254</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>157</x>
+     <y>274</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>buttonBox</sender>
+   <signal>rejected()</signal>
+   <receiver>Dialog</receiver>
+   <slot>reject()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>316</x>
+     <y>260</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>286</x>
+     <y>274</y>
+    </hint>
+   </hints>
+  </connection>
+ </connections>
+</ui>

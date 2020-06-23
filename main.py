@@ -1,3 +1,4 @@
+import copy
 import math
 import os
 
@@ -81,6 +82,11 @@ class MainWindow(QtWidgets.QMainWindow):
     spec_dict_p = []
     spec_plot = []
     spec_plot_lg = []
+    list_a = []
+    list_p = []
+    view = 0
+    one_range = 0
+    view_dict = {}
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -120,6 +126,9 @@ class MainWindow(QtWidgets.QMainWindow):
         self.spectr.triggered.connect(partial(self.spec_func))
         self.spec.type.currentIndexChanged.connect(partial(self.change_type_func))
         self.spec.mode.currentIndexChanged.connect(partial(self.change_mode_func))
+        self.spectro.kf.textChanged.connect(partial(self.spectrogramm_func))
+        self.spec.grid.itemAt(3).widget().textChanged.connect(partial(self.change_l))
+        self.test_button.triggered.connect(self.get_range)
         self.model_func_dictionary = {"1": self.model_func_1, "2": self.model_func_2, "3": self.model_func_3,
                                       "4": self.model_func_4, "5": self.model_func_5, "6": self.model_func_6,
                                       "7": self.model_func_7, "8": self.model_func_8, "9": self.model_func_9,
@@ -240,18 +249,24 @@ class MainWindow(QtWidgets.QMainWindow):
     def unwrap_graph(self, x, y, name, ticks):
         Plot = self.MainGraph.addPlot(clear=True, x=x, y=y, name=name, title=name)
         view = Plot.getViewBox()
+        view.setXRange(min=x[25], max=x[-25], padding=None)
+        #view.setLimits(xMin=x[25], xMax=x[-25], yMin=y[0], yMax=y[-1])
+        self.view_dict[name] = view
         # view.setMouseMode(pg.ViewBox.RectMode)
         view.setMouseEnabled(x=True, y=False)
+        self.one_range = (x[-1] - x[0]) / len(x)
         self.MainGraph.nextRow()
-        Plot.plot(clear=True, x=x, y=y, name=name).setPen(width=3)
+        #Plot.plot(clear=True, x=x, y=y, name=name).setPen(width=3)
+        print(view.state["viewRange"][0])
         if not (ticks is None):
+            n = self.variables_with_value["n"]
+            n = int(n / 5)
             xaxis = Plot.getAxis('bottom')
-            majorTicks = list(ticks.items())[::300]
+            majorTicks = list(ticks.items())[::n]
             minorTicks = list(ticks.items())
-            del minorTicks[::300]
+            del minorTicks[::n]
             xaxis.setTicks([majorTicks, minorTicks])
-        # self.MainGraph.setDownsampling(auto=True)
-        print('testing func')
+        #Plot.setDownsampling(auto=True, mode='peak')
 
     def hideFunc(self):
         if self.widget_cond:
@@ -350,7 +365,6 @@ class MainWindow(QtWidgets.QMainWindow):
             combo = QComboBox()
             self.model.form.addRow(QLabel("Сигнал:"), combo)
             combo.addItems(self.variables_with_value["Channels1"])
-            self.model.form.addRow(QLabel("Коэффициент нахлеста:"), QLineEdit())
             self.model.form.addRow(QLabel("Ширина:"), QLineEdit())
             self.model.form.addRow(QLabel("Высота:"), QLineEdit())
         self.model.show()
@@ -743,7 +757,13 @@ class MainWindow(QtWidgets.QMainWindow):
         ch_name = self.spec.grid.itemAt(0).widget().currentText()
         h0 = self.spec.grid.itemAt(1).widget().currentIndex()
         l = self.spec.grid.itemAt(3).widget().text()
-        coord = self.plots_dict[self.variables_with_value["Channels1"][ch]].yData
+        view = self.view_dict[self.variables_with_value["Channels1"][ch]]
+        rng = view.viewRange()
+        test = self.plots_dict[self.variables_with_value["Channels1"][ch]].xData.tolist()
+        ind1 = self.plots_dict[self.variables_with_value["Channels1"][ch]].xData.tolist().index(float(int(rng[0][0])))
+        ind2 = self.plots_dict[self.variables_with_value["Channels1"][ch]].xData.tolist().index(float(int(rng[0][1])))
+        n = ind2 - ind1
+        coord = self.plots_dict[self.variables_with_value["Channels1"][ch]].yData[ind1:ind2:]
         y_coordinates_a = numpy.fft.rfft(coord)
         y_coordinates_p = numpy.fft.rfft(coord)
         if h0 == 1:
@@ -753,7 +773,7 @@ class MainWindow(QtWidgets.QMainWindow):
             y_coordinates_a[0] = abs(y_coordinates_a[1])
             y_coordinates_p[0] = abs(y_coordinates_p[1])
         for i in range(len(y_coordinates_a)):
-            t = i / (self.variables_with_value["gerc"] * self.variables_with_value["n"])
+            t = i / (self.variables_with_value["gerc"] * n)
             x_value = x_value + t
             x_coordinates.append(t)
             y_coordinates_a[i] = t * abs(y_coordinates_a[i])
@@ -779,6 +799,8 @@ class MainWindow(QtWidgets.QMainWindow):
                 y_coordinates_a_lg.append(math.log10(y_coordinates_a[i]) * 20)
             else:
                 y_coordinates_a_lg.append(y_coordinates_a[i])
+        self.list_a.append(y_coordinates_a)
+        self.list_p.append(y_coordinates_p)
 
         plot = self.spec.specGraph.addPlot()
         plot.setLabels(left=ch_name, bottom="Частота(гц)")
@@ -830,19 +852,64 @@ class MainWindow(QtWidgets.QMainWindow):
                     self.spec_plot_lg[i].show()
                     self.spec_plot[i].autoRange()
 
+    def change_l(self):
+        l = self.spec.grid.itemAt(3).widget().text()
+        data_a = copy.deepcopy(self.list_a)
+        data_p = copy.deepcopy(self.list_p)
+        if l != "":
+            for h in range(len(self.list_a)):
+                y_coordinates_a = data_a[h]
+                y_coordinates_p = data_p[h]
+                x = self.spec_dict_a[h].xData
+                if int(l) != 0:
+                    l = int(l)
+                    mlt = 1 / ((2 * l) + 1)
+                    for j in range(len(y_coordinates_a)):
+                        summ_a = 0
+                        summ_p = 0
+                        for i in range(-l, l):
+                            if j + i < len(y_coordinates_a):
+                                summ_a += y_coordinates_a[abs(j + i)]
+                                summ_p += y_coordinates_p[abs(j + i)]
+                        y_coordinates_a[j] = summ_a * mlt
+                        y_coordinates_p[j] = summ_p * mlt
+
+                y_coordinates_a_lg = []
+                for i in range(len(y_coordinates_a)):
+                    if y_coordinates_a[i] > 0:
+                        y_coordinates_a_lg.append(math.log10(y_coordinates_a[i]) * 20)
+                    else:
+                        y_coordinates_a_lg.append(y_coordinates_a[i])
+
+                self.spec_dict_a[h].setData(x=x, y=y_coordinates_a, title=self.variables_with_value["Channels1"][h] + "_a")
+                self.spec_dict_p[h].setData(x=x, y=y_coordinates_p, title=self.variables_with_value["Channels1"][h] + "_p", pen={'color': "FF0"})
+                self.spec_plot_lg[h].setData(x=x, y=y_coordinates_a_lg, title=self.variables_with_value["Channels1"][h] + "_lg", pen={'color': "F0F"})
+
+
+
     def hide_all_exep_lg(self):
         for i in range(len(self.spec_dict_a)):
             self.spec_dict_a[i].hide()
             self.spec_dict_p[i].hide()
 
     def spectrogramm_func(self):
-        pg.setConfigOptions(imageAxisOrder='row-major')
+        self.spectro.hysto.clear()
+        #pg.setConfigOptions(imageAxisOrder='row-major')
         gercs, n = self.read_gerc_and_n()
         ch = self.model.form.itemAt(0, 1).widget().currentIndex()
-        data = self.plots_dict[self.variables_with_value["Channels1"][ch]].yData
-        nah = float(self.model.form.itemAt(1, 1).widget().text())
-        n_s = int(self.model.form.itemAt(2, 1).widget().text())
-        k = int(self.model.form.itemAt(3, 1).widget().text())
+        view = self.view_dict[self.variables_with_value["Channels1"][ch]]
+        rng = view.viewRange()
+        ind1 = self.plots_dict[self.variables_with_value["Channels1"][ch]].xData.tolist().index(float(int(rng[0][0])))
+        ind2 = self.plots_dict[self.variables_with_value["Channels1"][ch]].xData.tolist().index(float(int(rng[0][1])))
+        n = ind2 - ind1
+        data = self.plots_dict[self.variables_with_value["Channels1"][ch]].yData[ind1:ind2:]
+        nah = self.spectro.kf.text()
+        if nah != '':
+            nah = float(nah)
+        else:
+            nah = 1.0
+        n_s = int(self.model.form.itemAt(1, 1).widget().text())
+        k = int(self.model.form.itemAt(2, 1).widget().text())
         section_base = n / n_s
         section_n = int(section_base * nah)
         nnn = 2*k
@@ -856,7 +923,8 @@ class MainWindow(QtWidgets.QMainWindow):
             x = []
             n0 = i*int(section_base)
             for j in range(n0, section_n + n0):
-                x.append(data[j])
+                if j < len(data):
+                    x.append(data[j])
             s = 0
             for j in range(section_n):
                 s += x[j]
@@ -907,9 +975,18 @@ class MainWindow(QtWidgets.QMainWindow):
         img.scale(k / numpy.size(mat, axis=1),
                   n_s / numpy.size(mat, axis=0))
         p1.setLimits(xMin=0, xMax=k, yMin=0, yMax=n_s)
-        p1.setLabel('left', "Time", units='s')
-        p1.setLabel('bottom', "Frequency", units='Hz')
+        p1.setLabel('bottom', "Time", units='s')
+        p1.setLabel('left', "Frequency", units='Hz')
         self.spectro.show()
+
+    def get_range(self):
+        #n = self.variables_with_value["n1"]
+        one = self.one_range
+        #x = self.view.viewRange()
+        #x1 = x[0][0] / one
+        #x2 = x[0][1] / one
+        print(self.view_dict["BHN"].viewRange())
+
 
 
 def main():
