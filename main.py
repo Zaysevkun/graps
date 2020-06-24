@@ -87,6 +87,9 @@ class MainWindow(QtWidgets.QMainWindow):
     view = 0
     one_range = 0
     view_dict = {}
+    check1 = False
+    check2 = False
+    chs = []
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -247,16 +250,17 @@ class MainWindow(QtWidgets.QMainWindow):
         return 123
 
     def unwrap_graph(self, x, y, name, ticks):
-        Plot = self.MainGraph.addPlot(clear=True, x=x, y=y, name=name, title=name)
+        Plot = self.MainGraph.addPlot(clear=True, x=x, y=y, name=name, title=name, pen={'width': 3 })
         view = Plot.getViewBox()
         view.setXRange(min=x[25], max=x[-25], padding=None)
-        #view.setLimits(xMin=x[25], xMax=x[-25], yMin=y[0], yMax=y[-1])
+        # view.setLimits(xMin=x[25], xMax=x[-25], yMin=y[0], yMax=y[-1])
         self.view_dict[name] = view
+        Plot.sigXRangeChanged.connect(partial(self.change_range))
         # view.setMouseMode(pg.ViewBox.RectMode)
         view.setMouseEnabled(x=True, y=False)
         self.one_range = (x[-1] - x[0]) / len(x)
         self.MainGraph.nextRow()
-        #Plot.plot(clear=True, x=x, y=y, name=name).setPen(width=3)
+        # Plot.plot(clear=True, x=x, y=y, name=name).setPen(width=3)
         print(view.state["viewRange"][0])
         if not (ticks is None):
             n = self.variables_with_value["n"]
@@ -266,7 +270,7 @@ class MainWindow(QtWidgets.QMainWindow):
             minorTicks = list(ticks.items())
             del minorTicks[::n]
             xaxis.setTicks([majorTicks, minorTicks])
-        #Plot.setDownsampling(auto=True, mode='peak')
+        # Plot.setDownsampling(auto=True, mode='peak')
 
     def hideFunc(self):
         if self.widget_cond:
@@ -748,12 +752,15 @@ class MainWindow(QtWidgets.QMainWindow):
         self.spec.grid.itemAt(0).widget().addItems(self.variables_with_value["Channels1"])
         self.spec.show()
 
-    def do_it_func(self):
+    def do_it_func(self, ch=0):
+        self.check1 = True
         x_coordinates = []
         x_value = 0
         tip = self.spec.type.currentIndex()
         md = self.spec.mode.currentIndex()
-        ch = self.spec.grid.itemAt(0).widget().currentIndex()
+        if ch == 0:
+            ch = self.spec.grid.itemAt(0).widget().currentIndex()
+            self.chs.append(ch)
         ch_name = self.spec.grid.itemAt(0).widget().currentText()
         h0 = self.spec.grid.itemAt(1).widget().currentIndex()
         l = self.spec.grid.itemAt(3).widget().text()
@@ -805,7 +812,7 @@ class MainWindow(QtWidgets.QMainWindow):
         plot = self.spec.specGraph.addPlot()
         plot.setLabels(left=ch_name, bottom="Частота(гц)")
         plot_a = plot.plot(x=x_coordinates, y=y_coordinates_a,
-                           title=self.variables_with_value["Channels1"][ch] + "_a")
+                           title=self.variables_with_value["Channels1"][ch] + "_a", name=ch_name)
         plot_p = plot.plot(x=x_coordinates, y=y_coordinates_p,
                            title=self.variables_with_value["Channels1"][ch] + "_p", pen={'color': "FF0"})
         plot_lg = plot.plot(x=x_coordinates, y=y_coordinates_a_lg,
@@ -881,11 +888,14 @@ class MainWindow(QtWidgets.QMainWindow):
                     else:
                         y_coordinates_a_lg.append(y_coordinates_a[i])
 
-                self.spec_dict_a[h].setData(x=x, y=y_coordinates_a, title=self.variables_with_value["Channels1"][h] + "_a")
-                self.spec_dict_p[h].setData(x=x, y=y_coordinates_p, title=self.variables_with_value["Channels1"][h] + "_p", pen={'color': "FF0"})
-                self.spec_plot_lg[h].setData(x=x, y=y_coordinates_a_lg, title=self.variables_with_value["Channels1"][h] + "_lg", pen={'color': "F0F"})
-
-
+                self.spec_dict_a[h].setData(x=x, y=y_coordinates_a,
+                                            title=self.variables_with_value["Channels1"][h] + "_a", name=self.variables_with_value["Channels1"][h])
+                self.spec_dict_p[h].setData(x=x, y=y_coordinates_p,
+                                            title=self.variables_with_value["Channels1"][h] + "_p",
+                                            pen={'color': "FF0"})
+                self.spec_plot_lg[h].setData(x=x, y=y_coordinates_a_lg,
+                                             title=self.variables_with_value["Channels1"][h] + "_lg",
+                                             pen={'color': "F0F"})
 
     def hide_all_exep_lg(self):
         for i in range(len(self.spec_dict_a)):
@@ -893,8 +903,9 @@ class MainWindow(QtWidgets.QMainWindow):
             self.spec_dict_p[i].hide()
 
     def spectrogramm_func(self):
+        self.check2 = True
         self.spectro.hysto.clear()
-        #pg.setConfigOptions(imageAxisOrder='row-major')
+        # pg.setConfigOptions(imageAxisOrder='row-major')
         gercs, n = self.read_gerc_and_n()
         ch = self.model.form.itemAt(0, 1).widget().currentIndex()
         view = self.view_dict[self.variables_with_value["Channels1"][ch]]
@@ -912,26 +923,26 @@ class MainWindow(QtWidgets.QMainWindow):
         k = int(self.model.form.itemAt(2, 1).widget().text())
         section_base = n / n_s
         section_n = int(section_base * nah)
-        nnn = 2*k
+        nnn = 2 * k
         if section_n > nnn:
             while nnn < section_n:
                 nnn += nnn
         nn = nnn
-        l = nn / (2*k)
+        l = nn / (2 * k)
         matrix = []
         for i in range(n_s):
             x = []
-            n0 = i*int(section_base)
+            n0 = i * int(section_base)
             for j in range(n0, section_n + n0):
                 if j < len(data):
                     x.append(data[j])
             s = 0
             for j in range(section_n):
                 s += x[j]
-            s = s * (1/section_n)
+            s = s * (1 / section_n)
             for j in range(section_n):
                 x[j] -= s
-                w = 0.54 - 0.46 * math.cos((2 * math.pi * j)/(section_n - 1))
+                w = 0.54 - 0.46 * math.cos((2 * math.pi * j) / (section_n - 1))
                 x[j] *= w
             for j in range(nn - section_n):
                 x.append(0)
@@ -943,8 +954,8 @@ class MainWindow(QtWidgets.QMainWindow):
             a = a.real
             if int(l) > 1:
                 mlt = 1 / l
-                l1 = -(l - 1)/2
-                l2 = l/2
+                l1 = -(l - 1) / 2
+                l2 = l / 2
                 for j in range(len(a)):
                     summ = 0
                     for h in range(int(l1), int(l2)):
@@ -963,14 +974,14 @@ class MainWindow(QtWidgets.QMainWindow):
         self.spectro.hysto.addItem(hist)
         hist.setLevels(numpy.min(mat), numpy.max(mat))
 
-        #hist.gradient.restoreState(
+        # hist.gradient.restoreState(
         #    {'mode': 'rgb',
         #     'ticks': [(0.5, (0, 182, 188, 255)),
         #               (1.0, (246, 111, 0, 255)),
         #               (0.0, (75, 0, 113, 255))]})
         img.setImage(mat)
-        #p1.setAspectLocked(False)
-        #p1.setRange(xRange=[0, 100], yRange=[0, 100], padding=0)
+        # p1.setAspectLocked(False)
+        # p1.setRange(xRange=[0, 100], yRange=[0, 100], padding=0)
         # Scale the X and Y Axis to time and frequency (standard is pixels)
         img.scale(k / numpy.size(mat, axis=1),
                   n_s / numpy.size(mat, axis=0))
@@ -980,13 +991,31 @@ class MainWindow(QtWidgets.QMainWindow):
         self.spectro.show()
 
     def get_range(self):
-        #n = self.variables_with_value["n1"]
+        # n = self.variables_with_value["n1"]
         one = self.one_range
-        #x = self.view.viewRange()
-        #x1 = x[0][0] / one
-        #x2 = x[0][1] / one
+        # x = self.view.viewRange()
+        # x1 = x[0][0] / one
+        # x2 = x[0][1] / one
         print(self.view_dict["BHN"].viewRange())
 
+    def redo_all(self):
+        pass
+
+    def change_range(self):
+        if self.check1:
+            chs = self.chs.copy()
+            self.chs = []
+            self.spec.specGraph.clear()
+            self.spec_plot = []
+            self.spec_dict_a = []
+            self.spec_dict_p = []
+            self.spec_plot_lg = []
+            self.list_a = []
+            self.list_p = []
+            for i in range(len(chs)):
+                self.do_it_func(ch=chs[i])
+        if self.check2:
+            self.spectrogramm_func()
 
 
 def main():
